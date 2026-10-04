@@ -10,57 +10,64 @@ para HMAC-SHA-256 y FIPS 180-4 para SHA-256.
 """
 import os
 import sys
+import unittest
 
-_AQUI = os.path.dirname(__file__)
-sys.path[:0] = [os.path.join(_AQUI, "src"), os.path.join(_AQUI, "data")]
+_RAIZ = os.path.dirname(os.path.abspath(__file__))
+sys.path[:0] = [os.path.join(_RAIZ, "src"), os.path.join(_RAIZ, "data")]
 
 from cripto import mac_hmac, mac_ingenuo, romper_xor_1byte, verificar_mac, xor_cifrar
 from generar_datos import CLAVE, MENSAJE
 
+class RomperXOR(unittest.TestCase):
+    def test_recupera_la_clave_y_el_mensaje_del_reto(self):
+        cifrado = xor_cifrar(MENSAJE.encode(), bytes([CLAVE]))
+        clave, claro = romper_xor_1byte(cifrado)
+        self.assertEqual(clave, CLAVE)
+        self.assertEqual(claro.decode(), MENSAJE)
 
-def test_romper_recupera_clave_y_mensaje():
-    # El mismo reto que genera data/generar_datos.py, armado en memoria.
-    cifrado = xor_cifrar(MENSAJE.encode(), bytes([CLAVE]))
-    clave, claro = romper_xor_1byte(cifrado)
-    assert clave == CLAVE, f"clave hallada 0x{clave:02x}, esperada 0x{CLAVE:02x}"
-    assert claro.decode() == MENSAJE
+    def test_no_rompe_con_una_entrada_vacia(self):
+        self.assertEqual(romper_xor_1byte(b""), (0, b""))
 
+class MacIngenuo(unittest.TestCase):
+    def test_vector_cadena_vacia_flips_180_4(self):
+        # SHA-256("") -- clave y mensaje vacios, asi mac_ingenuo hashea "".
+        esperado = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        self.assertEqual(mac_ingenuo(b"", b""), esperado)
 
-def test_romper_no_explota_con_entrada_vacia():
-    assert romper_xor_1byte(b"") == (0, b"")
+    def test_vector_abc_flips_180_4(self):
+        # SHA-256("abc"), armado como clave="a" + mensaje="bc".
+        esperado = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        self.assertEqual(mac_ingenuo(b"a", b"bc"), esperado)
 
+class MacHmac(unittest.TestCase):
+    def test_vector_rfc423_caso_1(self):
+        clave = b"\x0b" * 20
+        esperado = "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7"
+        self.assertEqual(mac_hmac(clave, "Hi There"), esperado)
 
-def test_mac_ingenuo_es_sha256_de_la_concatenacion():
-    # FIPS 180-4: SHA-256("abc"). mac_ingenuo(b"a", b"bc") hashea "a" || "bc".
-    esperado = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
-    assert mac_ingenuo(b"a", b"bc") == esperado
+    def test_vector_rfc423_caso_2(self):
+        esperado = "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"
+        self.assertEqual(mac_hmac(b"Jefe", "what do ya want for nothing?"), esperado)
 
+    def test_no_coincide_con_el_mac_ingenuo_del_mismo_par(self):
+        clave, msg = b"secreta", b"pago 100"
+        self.assertNotEqual(mac_ingenuo(clave, msg), mac_hmac(clave, msg))
 
-def test_mac_hmac_contra_vector_rfc4231():
-    # RFC 4231, Test Case 1.
-    esperado = "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7"
-    assert mac_hmac(b"\x0b" * 20, b"Hi There") == esperado
+class VerificarMac(unittest.TestCase):
+    def setUp(self):
+        self.tag = mac_hmac(b"secreta", b"pago 100")
 
+    def test_acepta_el_tag_correcto(self):
+        self.assertTrue(verificar_mac(self.tag, self.tag))
 
-def test_ingenuo_y_hmac_no_son_lo_mismo():
-    clave, msg = b"secreta", b"pago 100"
-    assert mac_ingenuo(clave, msg) != mac_hmac(clave, msg)
+    def test_rechaza_un_solo_nibble_distinto(self):
+        primero = "0" if self.tag[0] != "0" else "1"
+        alterado = primero + self.tag[1:]
+        self.assertFalse(verificar_mac(self.tag, alterado))
 
-
-def test_verificar_mac():
-    tag = mac_hmac(b"secreta", b"pago 100")
-    assert verificar_mac(tag, tag) is True
-    # Un solo nibble cambiado tiene que rechazar.
-    alterado = ("f" if tag[0] != "f" else "0") + tag[1:]
-    assert verificar_mac(tag, alterado) is False
-    # Largos distintos y no-ASCII no deben lanzar excepcion: es dato de afuera.
-    assert verificar_mac(tag, "") is False
-    assert verificar_mac(tag, "ñ" * len(tag)) is False
-
+    def test_no_explota_con_largos_distintos_ni_con_no_ascii(self):
+        self.assertFalse(verificar_mac(self.tag, ""))
+        self.assertFalse(verificar_mac(self.tag, "ñ" * len(self.tag)))
 
 if __name__ == "__main__":
-    pruebas = [(k, v) for k, v in sorted(globals().items()) if k.startswith("test_")]
-    for nombre, prueba in pruebas:
-        prueba()
-        print(f"  ok  {nombre}")
-    print(f"\n{len(pruebas)} pruebas OK")
+    unittest.main(verbosity=2)
