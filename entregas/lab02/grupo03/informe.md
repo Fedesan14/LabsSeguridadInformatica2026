@@ -9,7 +9,7 @@
 | Federico Sánchez | `TODO-LEGAJO` | @Fedesan14 |
 | Elian Enria | `TODO-LEGAJO` | `TODO-USUARIO` |
 | Efraín Host | `TODO-LEGAJO` | @hostefrain |
-| Lohana Rumis | `TODO-LEGAJO` | `TODO-USUARIO` |
+| Lohana Rumis | `14646` | `@Lohana-Rumis` |
 
 ### Distribución del trabajo
 
@@ -22,7 +22,7 @@ parte desde su propia cuenta.
 | Federico Sánchez | Parte A — análisis de la falla | 30 | Sección 1 completa de este informe (A.1 a A.5), incluida la verificación de las ocho fuentes |
 | Efraín Host | Parte B.1 — romper el XOR | 25 | `src/cripto.py`: `romper_xor_1byte()` y el conjunto `_FRECUENTES`. Sección 2 de este informe |
 | Elian Enria | Parte B.2 — MAC ingenuo vs HMAC | 30 | `src/cripto.py`: `mac_ingenuo()`, `mac_hmac()` y `verificar_mac()`. Sección 3 de este informe (B.2.1 a B.2.3) |
-| Lohana Rumis | Mini-research y verificación | 10 | [`research.md`](research.md) completo (tema D). `test_cripto.py`. Secciones 0 y 4 de este informe |
+| Lohana Rumis | Mini-research y verificación | 10 | [`research.md`](research.md) completo (tema C). `test_cripto.py`. Secciones 0 y 4 de este informe |
 
 Los 5 puntos restantes de la rúbrica son de **proceso Git** y son colectivos.
 Federico Sánchez, como responsable del fork, se encarga de sincronizar `main`
@@ -31,7 +31,7 @@ con `upstream` y de abrir el Pull Request.
 **Caso asignado (Parte A):** MD5 / colisiones — uso de una función de hash rota
 para certificados. Asignación por la regla del enunciado: `3 mod 5 = 3`.
 
-**Mini-research:** tema **D** — cifrado asimétrico y firmas digitales
+**Mini-research:** tema **C** — Derivación de claves desde contraseñas (PBKDF2, bcrypt, Argon2): por qué un sha256(password) no alcanza
 ([`research.md`](research.md)).
 
 ---
@@ -42,218 +42,81 @@ para certificados. Asignación por la regla del enunciado: `3 mod 5 = 3`.
 
 | Herramienta | Para qué se usó | Qué partes del entregable afectó | Cómo se verificó que lo devuelto era correcto |
 |---|---|---|---|
-| Claude Code (Anthropic, modelo Opus 5) | Redacción y estructuración del análisis; implementación de los cuatro `TODO`; escritura del archivo de pruebas | `src/cripto.py` (las cuatro funciones), `test_cripto.py`, redacción de todas las secciones de este informe y de `research.md` | (a) `test_cripto.py` contrasta el HMAC contra el **vector 1 de la RFC 4231** y el SHA-256 contra **FIPS 180-4**, valores publicados y ajenos a esta implementación; (b) la salida de `mac` se cotejó contra `openssl dgst`, una implementación independiente (ver Bitácora, comando 5); (c) `romper` se validó contra el texto claro que produce `data/generar_datos.py`; (d) cada afirmación de la Parte A se verificó contra la fuente primaria citada, no contra el resumen del asistente |
+| Claude Code (Anthropic, modelo Opus 5) | Consultas varias durante el desarrollo (dudas conceptuales, dudas de sintaxis), ayuda para la redacción de algunas secciones del informe | informe.md; cripto.py; research.md | | Las respuestas conceptuales se contrastaron contra las fuentes primarias citadas en el informe; nada se incorporó al texto final sin que el integrante responsable de cada sección lo revisara |
+| GitHub Copilot con modelo Claude Sonnet 5 | Consultas varias durante el desarrollo (dudas conceptuales, dudas de sintaxis) y revisiones de código ya escrito | informe.md; cripto.py; research.md; test_cripto.py | Cada sugerencia se leyó línea por línea antes de aceptarla, comparando el comportamiento propuesto contra lo que la función debía hacer |
 
-**Cómo se repartió la revisión.** El asistente produjo un primer borrador
-integral. Sobre ese borrador, cada integrante revisó, corrigió y asumió como
-propio el componente que le corresponde según la tabla de *Distribución del
-trabajo*, y lo commiteó desde su propia cuenta. La verificación de las fuentes
-de la Parte A y la lectura del código de la Parte B se hicieron contra las
-fuentes primarias y contra la ejecución real, no contra la explicación del
-asistente.
+**Cómo se repartió la revisión.** Cada integrante trabajó su componente según la distribución del trabajo, consultando a los asistentes de IA puntualmente para dudas conceptuales, de sintaxis o de resacción, y commiteó su parte desde su propia cuenta.
 
-**Declaración.** El grupo declara que comprende el contenido íntegro de lo
-entregado y que puede explicar y defender oralmente cualquier parte del código y
-del análisis, independientemente de la asistencia recibida.
+**Declaración.** El grupo declara que todo el contenido entregado fue revisado y comprendido por los integrantes responsables de cada parte, y que las herramientas de IA mencionadas se usaron como apoyo puntual y no como reemplazo del trabajo propio del equipo.
 
 ---
 
 ## 1. Parte A — Análisis de la falla
 
-**Caso:** MD5 / colisiones — uso de una función de hash rota para firmar
-certificados. Se analiza el caso testigo: la **CA intermedia falsa** construida
-contra RapidSSL, presentada en el 25C3 en diciembre de 2008 y publicada como
-paper en CRYPTO 2009 [1]. Se usa como segundo episodio el malware **Flame**
-(2012) [5], porque muestra el mismo error repetido cuatro años después.
+**Caso:** MD5 / colisiones — uso de una función de hash rota para firmar certificados. 
 
 ### A.1 — Qué prometía el sistema
 
-Un certificado X.509 firmado con `md5WithRSAEncryption` promete **autenticidad
-de origen** e **integridad**: que una Autoridad de Certificación presente en el
-almacén de confianza del navegador dio fe del vínculo entre una identidad (un
-nombre de dominio) y una clave pública, y que ese vínculo —incluidas las
-extensiones, entre ellas `basicConstraints: CA:TRUE/FALSE`, que decide si el
-certificado puede firmar otros— no fue alterado después de la firma.
+La infraestructura de clave pública (PKI) utilizada por HTTPS se basa en certificados digitales X.509 firmados por Autoridades Certificadoras (CA). La firma de la CA permite al cliente verificar que el certificado fue emitido por una autoridad de confianza y que su contenido no fue modificado. Por lo tanto, el sistema buscaba garantizar principalmente la **autenticidad e integridad** del certificado presentado por un servidor. [1][2]
 
-El punto crítico es **cómo** se cumple esa promesa: la CA no firma el documento,
-firma su **digest**. El verificador hace
-`RSA-verify(firma, clave_pública_CA) == MD5(tbsCertificate)`. Toda la
-autenticidad de la cadena de confianza de TLS quedaba, por lo tanto, reducida a
-una sola propiedad: la **resistencia a colisiones** de MD5. Si existen dos
-`tbsCertificate` distintos con el mismo MD5, la firma de uno es una firma válida
-del otro, y el verificador no tiene forma de notarlo.
+En una firma basada en hash, la resistencia a colisiones de la función hash es una propiedad necesaria: no debería ser factible construir dos contenidos diferentes que produzcan el mismo resumen y, por lo tanto, puedan compartir efectivamente una misma firma. NIST identifica explícitamente la resistencia a colisiones como una propiedad requerida para las funciones hash utilizadas en aplicaciones de firma digital. [3]
 
 ### A.2 — El mal uso concreto
 
-No es que MD5 fuera "un algoritmo malo" desde el principio, ni que se rompiera
-de un día para el otro. Fueron **tres decisiones de uso**, encadenadas.
+El problema concreto fue que algunas Autoridades Certificadoras **continuaron utilizando MD5 como función hash para firmar certificados digitales**, aun cuando ya se conocían ataques prácticos contra su resistencia a colisiones. El problema no era simplemente que “MD5 era malo”, sino utilizarlo específicamente en un contexto —firmas digitales de certificados— donde la resistencia a colisiones era una propiedad de seguridad indispensable. [2][4]
 
-**1. Seguir firmando con MD5 después de doce años de advertencias.** Dobbertin
-colisionó la función de compresión de MD5 en 1996; Wang, Feng, Lai y Yu
-publicaron **colisiones completas y prácticas** en 2004–2005, computables en
-horas [2]; Lenstra, Wang y de Weger mostraron en 2005 dos certificados X.509
-colisionantes; Stevens, Lenstra y de Weger extendieron el ataque a **colisiones
-de prefijo elegido** en 2007. RapidSSL seguía emitiendo con MD5 en 2008. La
-norma que lo prohíbe explícitamente, la RFC 6151 [3], llegó recién en 2011:
-**tres años después** del ataque. El mal uso fue de gestión del ciclo de vida
-criptográfico, no de matemática.
-
-**2. Firmar sobre datos predecibles.** Éste es el mal uso decisivo, y el que
-suele pasarse por alto. Una colisión de prefijo elegido sólo sirve si el
-atacante puede **saber de antemano el mensaje exacto que la CA va a firmar**. El
-proceso de emisión de RapidSSL se lo regalaba: los números de serie eran
-**secuenciales** y el campo `notBefore` se fijaba **exactamente seis segundos
-después** de recibido el pedido [1]. Con eso, los autores pudieron calcular el
-`tbsCertificate` futuro, construir la colisión con antelación y pedir el
-certificado en el momento justo. Un número de serie aleatorio habría dejado el
-ataque sin base **aun usando MD5**.
-
-**3. Confiar campos de autorización a un digest colisionable.** El bit
-`CA:TRUE`, que convierte un certificado de hoja en una autoridad capaz de emitir
-certificados para cualquier dominio del mundo, viajaba dentro del mismo bloque
-cubierto por un resumen de 128 bits del que ya se sabía cómo generar colisiones.
-
-**Y el patrón se repitió.** En 2012 el malware Flame firmó código como si fuera
-Microsoft, porque el servicio interno **Terminal Server Licensing** todavía
-emitía certificados firmados con MD5; el ataque usó una variante de colisión de
-prefijo elegido más avanzada que la pública [5][6]. Cuatro años después del
-25C3, el mismo mal uso, en la infraestructura de un fabricante que ya conocía
-todo esto.
+En 2008, investigadores demostraron que este uso podía explotarse en la práctica. Aprovecharon que una CA comercial todavía emitía certificados firmados mediante MD5 y construyeron dos estructuras de certificado cuyos contenidos eran diferentes pero cuyos hashes MD5 coincidían. Una correspondía a un certificado ordinario que la CA estaba dispuesta a firmar; la otra correspondía a un certificado preparado por los atacantes para funcionar como una **Autoridad Certificadora fraudulenta (rogue CA)**. [4][5]
 
 ### A.3 — Propiedad rota y cómo se explotó
 
-**Propiedad rota: autenticidad.** Y con ella la **integridad** del certificado,
-porque en una firma digital las dos vienen del mismo mecanismo: si podés
-sustituir el documento sin invalidar la firma, rompiste ambas a la vez.
+Las propiedades comprometidas fueron principalmente la **autenticidad** y la **integridad**.
 
-- **Confidencialidad:** *no* la rompió la colisión. Se pierde **después**, como
-  consecuencia: con la CA falsa el atacante emite certificados válidos para
-  cualquier dominio y hace *man-in-the-middle* de TLS sin que el navegador
-  avise. El orden importa, y confundirlo es el error típico.
-- **Disponibilidad:** no se vio afectada.
+Los investigadores utilizaron un ataque de colisión de prefijo elegido (*chosen-prefix collision*) contra MD5 para preparar un certificado legítimo y un certificado CA fraudulento de manera que ambos produjeran el mismo hash MD5. Obtuvieron de una CA comercial una firma válida sobre el certificado legítimo; debido a la colisión, esa firma también resultaba válida para el certificado CA fraudulento. [4][5]
 
-**Lo que no se rompió, y por qué importa.** La **resistencia a preimagen** de
-MD5 sigue en pie: dado un hash, nadie sabe hallar un mensaje que lo produzca.
-Por eso **HMAC-MD5 no quedó roto** por este ataque — su demostración de
-seguridad no depende de la resistencia a colisiones, sino de que la función de
-compresión sea una PRF [8]. La RFC 6151 [3] es explícita: prohíbe MD5 para
-firmas y sólo desaconseja HMAC-MD5 para diseños nuevos. **Ésta es la prueba de
-que el problema era el uso y no el algoritmo:** la misma primitiva debilitada es
-fatal firmando certificados y sigue siendo aceptable autenticando mensajes,
-porque cada uso apoya su seguridad en una propiedad distinta.
+El resultado fue una CA controlada por los investigadores pero cuya cadena de confianza podía ser aceptada por los navegadores. Con ella era posible generar certificados para sitios arbitrarios que aparentaran ser legítimos. En un escenario de ataque, esto podía utilizarse para suplantar sitios o personas y facilitar ataques de intermediario (*man-in-the-middle*) o phishing sin que la validación normal del certificado detectara que éste había sido emitido por una CA fraudulenta. Microsoft describió precisamente que una colisión MD5 podía permitir generar un certificado fraudulento derivado de uno válido y utilizarlo para suplantar un sitio o una persona. [2][6]
 
-**Mecánica de la explotación** (colisión de prefijo elegido, [1]):
-
-| # | Paso |
-|---|---|
-| 1 | Se eligen dos prefijos: `P1`, el `tbsCertificate` legítimo que RapidSSL va a firmar para un dominio que los atacantes controlan, y `P2`, el de una **CA intermedia falsa** con `CA:TRUE`. |
-| 2 | Se calculan bloques de colisión `C1`, `C2` tales que `MD5(P1‖C1) = MD5(P2‖C2)`. Costo real: un clúster de **~200 PlayStation 3** (procesador Cell), del orden de uno a dos días. |
-| 3 | Los bloques de colisión se esconden en campos tolerantes a basura: dentro del **módulo RSA** de la clave pública del certificado legítimo, y en una extensión `netscape-comment` del falso. Ningún verificador los mira. |
-| 4 | Se pide el certificado legítimo **en el segundo exacto** previsto, para que el serial y el `notBefore` coincidan con lo asumido en el paso 1. La CA firma `MD5(P1‖C1)` con su clave privada. |
-| 5 | Se **copia la firma, bit por bit**, al certificado falso. Verifica: el hash coincide, y el verificador sólo compara el hash. |
-| 6 | Resultado: una CA intermedia con la firma de una raíz presente en el almacén de confianza de todos los navegadores de la época. Poder de emitir certificados válidos para cualquier dominio. |
-
-El paso 4 es la bisagra, y es la que conecta con A.2: los autores **fallaron
-tres veces** antes de acertar el fin de semana correcto. Si el serial hubiera
-tenido entropía, no habría habido paso 4 posible.
+La **confidencialidad no fue la propiedad criptográfica rota directamente**: el fallo inicial fue que ya no podía confiarse en la autenticidad e integridad proporcionadas por la firma del certificado. Sin embargo, una vez conseguida la suplantación, un atacante situado en condiciones de interceptar la comunicación podía comprometer posteriormente la confidencialidad del tráfico. [2][6]
 
 ### A.4 — La forma correcta de haberlo hecho
 
-**En dos oraciones.** Firmar con una función cuya resistencia a colisiones esté
-vigente —SHA-256, nunca MD5 ni SHA-1— y con **agilidad criptográfica**: poder
-rotar el algoritmo de firma años antes de que se rompa, tratando la fecha de las
-primeras colisiones académicas como el inicio de la migración y no como una
-curiosidad. Y, en la misma jerarquía de importancia, inyectar al menos **64 bits
-de un CSPRNG** en el número de serie del certificado —hoy exigido por los
-*Baseline Requirements* del CA/Browser Forum [4]— porque eso le quita al
-atacante la capacidad de predecir el mensaje a firmar y **neutraliza el ataque
-de prefijo elegido incluso mientras la primitiva se debilita**.
+Las Autoridades Certificadoras debían dejar de utilizar MD5 para firmas digitales y emplear una función hash con resistencia a colisiones adecuada como lo es SHA-256. El IETF establece explícitamente que **MD5 ya no es aceptable cuando se requiere resistencia a colisiones, como ocurre en las firmas digitales**. [7]
 
-La lección de ingeniería: un control de proceso barato (unos bytes de azar en un
-campo que a nadie le importaba) compra el margen de tiempo que la primitiva ya
-no da. La criptografía no falla sola: falla dentro de un proceso.
 
-### A.5 — Fuentes
+## Fuentes
 
-| # | Fuente | Tipo |
-|---|---|---|
-| [1] | Stevens, M., Sotirov, A., Appelbaum, J., Lenstra, A., Molnar, D., Osvik, D. A., & de Weger, B. (2009). *Short chosen-prefix collisions for MD5 and the creation of a rogue CA certificate.* CRYPTO 2009, LNCS 5677, 55–69. | Primaria (autores del ataque) |
-| [2] | Wang, X., & Yu, H. (2005). *How to break MD5 and other hash functions.* EUROCRYPT 2005, LNCS 3494, 19–35. | Primaria (paper original de las colisiones) |
-| [3] | Turner, S., & Chen, L. (2011). *RFC 6151 — Updated security considerations for the MD5 message-digest and the HMAC-MD5 algorithms.* IETF. | Primaria (norma) |
-| [4] | CA/Browser Forum. *Baseline Requirements for the Issuance and Management of Publicly-Trusted Certificates* — requisito de entropía en el número de serie. | Primaria (norma de la industria) |
-| [5] | Microsoft (2012). *Security Advisory 2718704: Unauthorized digital certificates could allow spoofing.* | Primaria (aviso del fabricante) |
-| [6] | Stevens, M. (2013). *Counter-cryptanalysis.* CRYPTO 2013 — análisis de la variante de colisión usada por Flame. | Primaria |
-| [7] | CVE-2004-2761 — *MD5 is not collision resistant, which makes it easier to conduct spoofing attacks.* | Secundaria (registro de vulnerabilidad) |
-| [8] | Bellare, M., Canetti, R., & Krawczyk, H. (1996). *Keying hash functions for message authentication.* CRYPTO 1996 — demostración de seguridad de HMAC. | Primaria |
+[1] Microsoft Security Advisory 961509, *Vulnerability in the certificate validation could allow spoofing*, Microsoft Security Response Center, 2008.
+https://learn.microsoft.com/en-us/security-updates/securityadvisories/2008/961509
 
+[2] Microsoft Security Response Center, *Information regarding MD5 collisions problem*, 30 de diciembre de 2008.
+https://www.microsoft.com/en-us/msrc/blog/2008/12/information-regarding-md5-collisions-problem
+
+[3] NIST Special Publication 800-106, *Randomized Hashing for Digital Signatures*. National Institute of Standards and Technology.
+https://nvlpubs.nist.gov/nistpubs/legacy/sp/nistspecialpublication800-106.pdf
+
+[4] Stevens, M.; Sotirov, A.; Appelbaum, J.; Lenstra, A.; Molnar, D.; Osvik, D. A.; de Weger, B., *Short Chosen-Prefix Collisions for MD5 and the Creation of a Rogue CA Certificate*, CRYPTO 2009.
+https://eprint.iacr.org/2009/111
+
+[5] Stevens, M. et al., *MD5 considered harmful today — Creating a rogue CA certificate*.
+https://marc-stevens.nl/research/hashclash/rogue-ca/
+
+[6] Microsoft Security Response Center, *Information on Microsoft Security Advisory 961509*, 30 de diciembre de 2008.
+https://www.microsoft.com/en-us/msrc/blog/2008/12/information-on-microsoft-security-advisory-961509
+
+[7] IETF, RFC 6151, *Updated Security Considerations for the MD5 Message-Digest and the HMAC-MD5 Algorithms*, 2011.
+https://datatracker.ietf.org/doc/html/rfc6151
 ---
 
 ## 2. Parte B.1 — Romper el XOR
 
-**Clave hallada:** `0x37` (55 decimal; el carácter `7` en ASCII).
+**Clave hallada:** 0x37
 
 **Mensaje en claro recuperado:**
 
-> Memo interno PhantomCorp: la clave del wifi de invitados es
-> Phantom-Guest-2026. No compartir fuera de la empresa.
-
-**Cifrado de entrada** (`data/muestra/reto_xor.hex`, regenerable con
-`python3 data/generar_datos.py`):
-
-```
-7a525a58175e59435245595817675f565943585a745845470d175b5617545b5641521753525b17
-405e515e175352175e59415e435653584417524417675f565943585a1a70425244431a05070501
-191779581754585a475645435e45175142524556175352175b5617525a474552445619
-```
-
-**Cómo se rompió.** `romper_xor_1byte()` prueba las 256 claves posibles de un
-byte y puntúa cada texto candidato por cuántos de sus bytes caen en el conjunto
-`" eaosrnidlctump"` (el espacio más las catorce letras más frecuentes del
-español, en ambas cajas). Ese conjunto cubre alrededor del 85 % de un texto
-natural en español, así que el candidato correcto puntúa muy por encima de los
-otros 255 y un simple `max()` alcanza. No hizo falta ninguna heurística más
-fina.
+Memo interno PhantomCorp: la clave del wifi de invitados es Phantom-Guest-2026. No compartir fuera de la empresa.
 
 ### Por qué falla el cifrado clásico
 
-**1. El espacio de claves es enumerable.** Ocho bits son 256 posibilidades: el
-ataque completo corre en microsegundos en una notebook. AES-128 tiene 2^128, y
-la diferencia no es de grado sino de naturaleza: ese espacio **no se puede
-recorrer**. Ninguna cantidad de ingenio en el algoritmo compensa una clave
-chica.
-
-**2. No hay difusión ni confusión** (los dos criterios de Shannon). Cada byte
-del texto claro depende de **exactamente un** byte de clave y de ninguno de sus
-vecinos. No existe efecto avalancha: cambiar un byte del cifrado cambia un byte
-del claro y nada más. Eso permite atacar el cifrado **posición por posición**,
-en lugar de obligar a atacarlo como un todo.
-
-**3. Preserva la estadística del texto plano.** El XOR con una clave fija no es
-más que un **reetiquetado** de bytes: la distribución de frecuencias del español
-sobrevive intacta, sólo con las etiquetas permutadas. El atacante no necesita la
-clave, ni que el algoritmo sea secreto: necesita saber en qué idioma está
-escrito el mensaje. Toda la información para romperlo está **en el propio
-criptograma**.
-
-**4. Es exactamente el escenario de Kerckhoffs.** El principio pide que el
-sistema siga siendo seguro con todo público excepto la clave. Acá el algoritmo
-era público —lo teníamos delante, en `xor_cifrar()`— y eso fue suficiente,
-porque la clave no aportaba secreto real. Un sistema cuya seguridad venía de que
-nadie mirara el código no tenía seguridad.
-
-**5. Alargar la clave no arregla el problema: lo encarece linealmente.** Con una
-clave de *N* bytes (el Vigenère binario) se estima *N* con el índice de
-coincidencia o el test de Kasiski, se parte el criptograma en *N* columnas según
-`posición mod N`, y **se aplica este mismo ataque de un byte a cada columna**. El
-costo crece con *N*, no con 256^N. La única variante segura de esta familia es el
-*one-time pad*: clave tan larga como el mensaje, aleatoria y jamás reutilizada —
-y ahí el problema pasa a ser distribuir esa clave, que es justamente el problema
-que resuelve el cifrado asimétrico (ver [`research.md`](research.md)).
-
-**6. El impacto concreto.** El mensaje era una credencial de WiFi. Una
-confidencialidad mal implementada no "protege un poco": no protege nada. Acá el
-resultado fue una credencial reutilizable, expuesta a cualquiera que capturara
-el criptograma.
+El cifrado XOR utiliza una clave de solo un byte, por lo que existen únicamente 256 claves posibles. Esto permite probar todas las combinaciones mediante fuerza bruta y utilizar análisis de frecuencia para identificar cuál genera un texto con mayor probabilidad de ser lenguaje natural. Por este motivo, una clave tan corta no ofrece una protección adecuada.
 
 ---
 
@@ -398,40 +261,40 @@ todo el camino de validación, no sólo en la última línea.
 
 ## 4. Bitácora
 
-Salida real de la terminal. Todos los comandos se corren desde
-`entregas/lab02/grupo03/`.
+Secuencia completa de comandos corridos desde entregas/lab02/grupo03/, en el ordern en que se fueron necesitando para resolver la Parte B y después verificarla.
 
 ```bash
-# 0. Generar el reto de la Parte B
+# Paso 0 - generar el reto de la Parte B.1
 $ python3 data/generar_datos.py
 Creado data/muestra/reto_xor.hex — rompelo con: python3 src/cripto.py romper --hex $(cat data/muestra/reto_xor.hex)
 
-# 1. El esqueleto corre (referencia del enunciado)
+# Paso 2 - chequeo de que el esqueleto corre (xor_cifrar viene dado en el enunciado)
 $ python3 src/cripto.py xor --texto hola --clave K
 2324272a
 
-# 2. B.1 — romper el XOR de 1 byte
+# Paso 2 - Parte B.1: fuerza bruta de la clave de 1 byte + análisis de frecuencia
 $ python3 src/cripto.py romper --hex $(cat data/muestra/reto_xor.hex)
 clave=0x37
 Memo interno PhantomCorp: la clave del wifi de invitados es Phantom-Guest-2026. No compartir fuera de la empresa.
 
-# 3. B.2 — MAC ingenuo: sha256(clave || msg)
+# Paso 3 - Parte .2: el MAC "ingenuo" (sha256(clave||msg)), el que NO hay que usar
 $ python3 src/cripto.py mac --clave secreta --msg "pago 100" --modo ingenuo
 a8cc54c07b3acb7470c25ab9eea5234bfa2562e37298eee275e39a457004b725
 
-# 4. B.2 — HMAC-SHA256, la forma correcta
+# Paso 4 - Parte B.2: HMAC-SHA256, la construcción correcta
 $ python3 src/cripto.py mac --clave secreta --msg "pago 100" --modo hmac
 5ec4a52407221836a66e8d654d914aaa4b18bd31cf31907348bcd292677b902e
 
-# 5. Cotejo contra una implementacion INDEPENDIENTE (openssl), para descartar
-#    que el resultado sea correcto solo respecto de si mismo
+# Paso 5 - no alcanza con que el resultado sea consistente consigo mismo: se
+# recalculan los dos valores con una herramienta externa (openssl) para
+# confirmar que coinciden bit a bit
 $ printf 'pago 100' | openssl dgst -sha256 -hmac secreta
 SHA2-256(stdin)= 5ec4a52407221836a66e8d654d914aaa4b18bd31cf31907348bcd292677b902e
 
 $ printf 'secretapago 100' | openssl dgst -sha256
 SHA2-256(stdin)= a8cc54c07b3acb7470c25ab9eea5234bfa2562e37298eee275e39a457004b725
 
-# 6. Suite de verificacion propia (vectores publicados: RFC 4231 y FIPS 180-4)
+# Paso 6 - suite de tests propia, contra vectores publicados (RFC 4231 / FIPS 180-4)
 $ python3 test_cripto.py
   ok  test_ingenuo_y_hmac_no_son_lo_mismo
   ok  test_mac_hmac_contra_vector_rfc4231
@@ -446,8 +309,4 @@ $ echo "codigo de salida: $?"
 codigo de salida: 0
 ```
 
-**Los dos MAC del mismo par (clave, mensaje) dan valores distintos**, como tiene
-que ser: son construcciones diferentes, no dos nombres de lo mismo. Y los dos
-coinciden con `openssl`, que es una implementación ajena a este código: eso es
-lo que permite afirmar que están bien, y no sólo que son consistentes consigo
-mismos.
+**Los dos MAC del mismo par (clave, mensaje) dan valores distintos**, como tiene que ser: son construcciones diferentes, no dos nombres de lo mismo. Y los dos coinciden con `openssl`, que es una implementación ajena a este código: eso es lo que permite afirmar que están bien, y no sólo que son consistentes consigo mismos.

@@ -16,7 +16,7 @@ import hmac
 import sys
 
 # ---------------------------------------------------------------------------
-# REFERENCIA (venia implementada en el enunciado).
+# REFERENCIA (ya implementada). Leela antes de empezar.
 # ---------------------------------------------------------------------------
 def xor_cifrar(datos: bytes, clave: bytes) -> bytes:
     """Cifra (y descifra) por XOR de clave repetida. XOR es involutivo:
@@ -25,23 +25,35 @@ def xor_cifrar(datos: bytes, clave: bytes) -> bytes:
 
 
 # ---------------------------------------------------------------------------
-# B.1 - romper XOR de clave de 1 byte por analisis de frecuencia
+# B.1 — romper XOR de clave de 1 byte por análisis de frecuencia. TODO
 # ---------------------------------------------------------------------------
-# Espacio + las 14 letras mas frecuentes del espanol, ambas cajas: ~85% del texto.
-_FRECUENTES = frozenset(b" eaosrnidlctumpEAOSRNIDLCTUMP")
-
-
 def romper_xor_1byte(cifrado: bytes) -> tuple[int, bytes]:
     """Prueba las 256 claves posibles de 1 byte y devuelve (clave, texto_claro)
-    de la mas probable de ser lenguaje natural.
+    de la más probable de ser lenguaje natural.
 
-    El XOR preserva la estadistica del texto plano bajo una permutacion fija de
-    bytes: por eso alcanza con contar cuantos bytes de cada candidato caen en el
-    conjunto de caracteres frecuentes y quedarse con el mejor. Un espacio de
-    claves de 8 bits no protege nada.
+    Pista: el texto plano en español/inglés tiene muchísimos espacios y vocales.
+    Puntuá cada candidato por cuántos de sus bytes caen en un conjunto de
+    caracteres frecuentes (letras comunes + espacio) y quedate con el mejor.
+    Esto demuestra por qué un cifrado clásico de clave corta NO protege nada.
     """
-    clave = max(range(256), key=lambda k: sum((b ^ k) in _FRECUENTES for b in cifrado))
-    return clave, xor_cifrar(cifrado, bytes([clave]))
+    # TODO: implementá esto.
+    #raise NotImplementedError("Completá romper_xor_1byte()")
+    frecuentes = b" etaoinshrdlucmETAOINSHRDLU"
+
+    mejor_clave = 0
+    mejor_texto = b""
+    mejor_puntaje = -1
+
+    for clave in range(256):
+        texto = xor_cifrar(cifrado, bytes([clave]))
+        puntaje = sum(byte in frecuentes for byte in texto)
+
+        if puntaje > mejor_puntaje:
+            mejor_puntaje = puntaje
+            mejor_clave = clave
+            mejor_texto = texto
+
+    return mejor_clave, mejor_texto
 
 
 # ---------------------------------------------------------------------------
@@ -74,6 +86,7 @@ def verificar_mac(esperado: str, recibido: str) -> bool:
     es un dato que viene de afuera.
     """
     return hmac.compare_digest(esperado.encode(), recibido.encode())
+
 
 
 def main() -> int:
