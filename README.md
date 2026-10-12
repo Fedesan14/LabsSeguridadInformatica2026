@@ -139,6 +139,7 @@ LabsSeguridadInformatica2026/
 - [Guía del curso](docs/GUIA-DEL-CURSO.md) — qué es el práctico, el arco completo y cómo se trabaja.
 - [Guía para docentes](docs/PARA-DOCENTES.md) — diseño pedagógico, corrección y cómo crear labs nuevos.
 - [Arquitectura del motor](docs/ARQUITECTURA.md) — cómo funciona por dentro.
+- [Presentación (terminal)](docs/presentacion.py) — deck ASCII **bien hacker** (Python/curses): intro con lluvia de Matrix, `./docs/presentacion.py` (← → navegar · `q` salir).
 - [Presentación (HTML)](docs/presentacion.html) — deck para presentar el práctico (abrila en el navegador).
 - [Presentación (PPT)](docs/CyberLab-UTN.pptx) — la misma, en PowerPoint editable, como respaldo.
 
