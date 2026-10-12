@@ -1,6 +1,6 @@
 # Laboratorio 08 — Post-explotación y automatización
 
-**Unidad 8** · <título según programa analítico>
+**Unidad 8** · Post-explotación: escalada de privilegios, pivoting y scripting
 **Modalidad:** grupos de 4 a 5 integrantes
 **Entrega:** fork + Pull Request, en `entregas/lab08/grupoXX/`
 **Entorno:** Docker (dos hosts en redes segmentadas)
@@ -236,3 +236,12 @@ En `entregas/lab08/grupoXX/`: `informe.md`, `src/recolector.py` (completado) y
 
 Post-explotación es control de un sistema ajeno: máxima gravedad legal fuera del
 lab. Solo la cátedra. Ley 26.388.
+
+---
+
+## Retos bonus (opcional)
+
+¿Estas flags te quedaron cortas? En el
+[banco de retos bonus](../../docs/BANCO-DE-RETOS.md) hay **3 desafíos más para
+este lab**, con más herramientas y dificultad progresiva (★ / ★★ / ★★★). No
+cuentan para la aprobación, pero es donde te hacés bueno de verdad.

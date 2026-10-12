@@ -1,0 +1,9 @@
+# auth.log  ·  phantomcorp-web  ·  OJO: este archivo parece haber sido tocado.
+Sep  5 02:19:55 phantomcorp-web sshd[1201]: Accepted password for www-data from 185.220.101.42
+Sep  5 02:20:31 phantomcorp-web sudo:  www-data : command not allowed ; TTY=pts/0 ; PWD=/var/www ; USER=root ; COMMAND=/bin/bash
+Sep  5 02:21:04 phantomcorp-web kernel: [ 8823.11] audit: SUID exec /usr/local/bin/system-check uid=33 euid=0
+# --- lineas eliminadas por el atacante ---
+# nota del forense: el hash de este archivo NO coincide con el de la custodia.
+# alguien lo edito despues de la captura. marcador recuperado del journal:
+# FLAG{dfir_custodia_alterada}
+Sep  5 02:45:00 phantomcorp-web sshd[1440]: Connection closed by 185.220.101.42

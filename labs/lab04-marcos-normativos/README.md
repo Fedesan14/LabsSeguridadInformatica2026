@@ -85,6 +85,20 @@ Creá un `riesgos.json` con **al menos cuatro** riesgos del escenario de la Part
 
 ---
 
+## Autoevaluación (feedback instantáneo)
+
+Mientras completás los `TODO`, chequeá tu avance sin esperar la corrección:
+
+```bash
+python3 src/verificar.py
+```
+
+**Verde** = va · **rojo** = revisá (te dice qué falló) · **gris** = todavía no lo
+implementaste. No es la nota — es para que **iteres solo**, como con las flags de
+los labs ofensivos.
+
+---
+
 ## Qué se entrega
 
 `informe.md` (Parte A + B), `src/riesgo.py` completado y tu `riesgos.json`.
@@ -93,3 +107,12 @@ Rúbrica en [`docs/rubrica.md`](docs/rubrica.md).
 ## Uso responsable
 
 Los datos del escenario son ficticios. Ley 26.388 · ver `CONTRIBUTING.md`.
+
+---
+
+## Retos bonus (opcional)
+
+¿Estas flags te quedaron cortas? En el
+[banco de retos bonus](../../docs/BANCO-DE-RETOS.md) hay **3 desafíos más para
+este lab**, con más herramientas y dificultad progresiva (★ / ★★ / ★★★). No
+cuentan para la aprobación, pero es donde te hacés bueno de verdad.

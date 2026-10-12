@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Fernando Boiero — CyberLab UTN FRVM
 # ctf — punto de entrada autodescubrible del curso. Corré ./ctf sin argumentos.
 set -euo pipefail
 CTF_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; export CTF_ROOT

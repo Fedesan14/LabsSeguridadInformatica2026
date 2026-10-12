@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Fernando Boiero — CyberLab UTN FRVM
 # start.sh — genérico. Arranca el lab: banner, levanta el entorno y abre la guía.
 # No hace falta editarlo: deriva el número y el tema del nombre del directorio.
 set -euo pipefail

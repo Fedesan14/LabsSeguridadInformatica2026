@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Fernando Boiero — CyberLab UTN FRVM
 # banner.sh — arte ASCII del curso.
 banner_main() {
   printf '%s' "${C_CYAN}${C_BOLD}"

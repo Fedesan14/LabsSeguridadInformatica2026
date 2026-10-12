@@ -1,0 +1,9 @@
+# Retos del Lab Extra 3 — Defendé PhantomCorp (hardening).  id|titulo|sha256(flag)
+# Las flags las DA el verificador cuando tu parche bloquea el ataque:
+#   python3 labs/labextra3-hardening/verificar-defensa.py --dir entregas/labextra3/grupoXX/objetivo
+# Entregá con:  ./ctf submit extra3 D1 'FLAG{...}'
+D1|Banner neutralizado (info leak de version)|526752436856b7af29b09a9710a9117a3ce5455d05fbf14659a5abc3f15711db
+D2|Endpoint de debug apagado en produccion|587eec8980d3fe0e9fcdc7984d004ae3cc84ea9927d62541f0f3bf119b2590dc
+D3|Rutas sensibles blindadas (backup + robots)|f5aea56982e8e809dffc315aa69c1638fcb7336fd752d997747caa845140f09a
+D4|Login parametrizado (SQLi bloqueado)|dd12b0c07a980cb77c395753596f48326f24f32aeb2be558c2508e27ba486d4f
+D5|Path traversal bloqueado en /descargar|8ca265d31868a3672fbdfeedb82ea00f3f7ed03762b2126bf3f646b760f5ab58

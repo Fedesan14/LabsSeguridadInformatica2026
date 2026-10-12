@@ -1,0 +1,13 @@
+{
+  "name": "clase-05-06-deck",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Generador del deck de la clase 05-06 (cruce a ofensiva) — CyberLab UTN",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "build": "node generar.js"
+  },
+  "dependencies": {
+    "pptxgenjs": "4.0.1"
+  }
+}

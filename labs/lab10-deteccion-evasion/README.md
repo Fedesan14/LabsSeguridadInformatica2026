@@ -177,3 +177,12 @@ En `entregas/lab10/grupoXX/`: `informe.md` (tabla de firmas + P1–P5 + captura 
 Evadir detección se practica **solo** contra el lab. Fuera de acá, evadir un IDS
 ajeno agrava el delito (Ley 26.388). El objetivo acá es **entender la defensa**,
 no burlar la de nadie.
+
+---
+
+## Retos bonus (opcional)
+
+¿Estas flags te quedaron cortas? En el
+[banco de retos bonus](../../docs/BANCO-DE-RETOS.md) hay **3 desafíos más para
+este lab**, con más herramientas y dificultad progresiva (★ / ★★ / ★★★). No
+cuentan para la aprobación, pero es donde te hacés bueno de verdad.

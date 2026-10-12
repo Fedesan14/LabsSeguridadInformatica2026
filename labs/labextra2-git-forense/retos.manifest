@@ -1,0 +1,6 @@
+# Retos del Lab Extra 2 — El repo que delata (forense git).  id|titulo|sha256(flag)
+# Se resuelven investigando el repo generado por caso/generar-caso.sh
+# Entregá con:  ./ctf submit extra2 R1 'FLAG{...}'
+R1|Secreto "borrado" en un commit viejo (git log -p)|59857eed84b3e4d186f54de9e9336b67fc5bfffbe9c014895577a82cf1b0429e
+R2|Commit "perdido" por un reset (git reflog / fsck)|49d414ed6cf94bbafafd69199ce8e23408c5b153ff159b897c8756f1370fee00
+R3|Secreto en una rama abandonada|958d281a718737a64360ddeb77d3431fc8536d3d10ce4e086550d788280e7d29

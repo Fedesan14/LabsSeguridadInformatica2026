@@ -56,6 +56,7 @@ Reglas que valen para todos los labs:
 | [08](labs/lab08-postexplotacion/) | 8 | Post-explotación y automatización: loot, SUID, pivoting y scripting | **Publicado** |
 | [09](labs/lab09-agentes/) | 9 | Agentes de pentest: tool-use, guardrails y APIs de LLM (Claude/OpenAI/mock) | **Publicado** |
 | [10](labs/lab10-deteccion-evasion/) | 10 | Detección y evasión: la vista del defensor (Blue vs Red) | **Publicado** |
+| [11](labs/lab11-forensia/) | 11 | Forensia del pentest (DFIR): logs, disco, memoria y cadena de custodia | **Publicado** |
 | [★ Final](labs/labfinal-practico-integrador/) | — | **Práctico final integrador**: engagement completo + informe de pentest profesional | **Publicado** |
 
 Cada laboratorio se habilita al inicio de la unidad correspondiente. Los
@@ -136,12 +137,38 @@ LabsSeguridadInformatica2026/
 
 ## Documentación
 
+- **[Empezá por acá](docs/INTRODUCCION.md)** — introducción: qué hacer en todos los prácticos y qué se agregó desde la última clase.
+
+- **[Novedades](docs/NOVEDADES.md)** — qué cambió desde la última clase y cómo sincronizar tu fork.
+
 - [Guía del curso](docs/GUIA-DEL-CURSO.md) — qué es el práctico, el arco completo y cómo se trabaja.
-- [Guía para docentes](docs/PARA-DOCENTES.md) — diseño pedagógico, corrección y cómo crear labs nuevos.
+- [Guía dinámica de clases](docs/GUIA-DINAMICA-CLASES.md) — cada clase explicada con gancho, ejemplo y dato hacker (para engancharse).
+- [Resumen teórico + referencias](docs/RESUMEN-TEORICO.md) — intro teórica de cada tema y documentación pública libre para profundizar.
+- [Banco de retos bonus](docs/BANCO-DE-RETOS.md) — ~30 desafíos opcionales, progresivos (★/★★/★★★), con más herramientas por lab.
+- [Informe modelo](docs/INFORME-MODELO.md) — el molde de lo que se entrega: un informe de ejemplo con la estructura y calidad que espera la rúbrica.
+- [Cheatsheet de comandos](docs/CHEATSHEET.md) — las tools por fase, listas para copiar (comandos, no respuestas).
+- [Glosario](docs/GLOSARIO.md) — la jerga en criollo + el lab donde aparece cada término.
+- [FAQ y troubleshooting](docs/FAQ.md) — cuando algo no anda: los errores más comunes y cómo salir.
+- [Guía para docentes](docs/PARA-DOCENTES.md) — diseño pedagógico, corrección, rotar flags y cómo crear labs nuevos.
 - [Arquitectura del motor](docs/ARQUITECTURA.md) — cómo funciona por dentro.
+- **[Intro de clase](docs/intro-clase.py)** — presentación CORTA para abrir la clase (novedades + cómo trabajan). `./docs/intro-clase.py`
 - [Presentación (terminal)](docs/presentacion.py) — deck ASCII **bien hacker** (Python/curses): intro con lluvia de Matrix, `./docs/presentacion.py` (← → navegar · `q` salir).
 - [Presentación (HTML)](docs/presentacion.html) — deck para presentar el práctico (abrila en el navegador).
 - [Presentación (PPT)](docs/CyberLab-UTN.pptx) — la misma, en PowerPoint editable, como respaldo.
+- [Deck Clase 05-06 (PPT)](docs/clase-05-06-cruce-ofensiva.pptx) — cruce a ofensiva (recon + enum). Reproducible: [`docs/presentaciones/clase-05-06/`](docs/presentaciones/clase-05-06/).
+- [Deck Estado + hoja de ruta (PPT)](docs/estado-y-hoja-de-ruta.pptx) — dónde estamos, qué falta y el calendario con fechas. Reproducible: [`docs/presentaciones/estado-hoja-de-ruta/`](docs/presentaciones/estado-hoja-de-ruta/).
+
+---
+
+## Licencia
+
+Doble licencia (ver [`LICENSING.md`](LICENSING.md)):
+
+- **Código** (motor, scripts, targets) → [AGPL-3.0-or-later](LICENSE)
+- **Documentación y material educativo** → [CC-BY-SA-4.0](LICENSE-DOCS)
+
+Copyright © 2026 Fernando Boiero — UTN FRVM. Podés reutilizar el material del
+curso citando la fuente y compartiendo bajo la misma licencia.
 
 ---
 

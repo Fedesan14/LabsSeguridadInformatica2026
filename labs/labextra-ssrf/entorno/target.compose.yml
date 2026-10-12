@@ -1,0 +1,21 @@
+# Target del Lab Extra SSRF. Dos hosts en redes SEGMENTADAS (mismo patrón
+# que el Lab 08):
+#  - phantomcorp        (web pública + panel interno en localhost): labnet + internalnet
+#  - phantomcorp-intra  (intranet)                                : SOLO internalnet
+# La consola atacante está en labnet -> NO alcanza la intranet directamente.
+# La única forma de leerla es a través del SSRF del servidor público.
+services:
+  phantomcorp:
+    build: ./labs/labextra-ssrf/entorno/web
+    container_name: cyberlab-ssrf-web
+    hostname: phantomcorp
+    networks: [labnet, internalnet]
+  phantomcorp-intra:
+    build: ./labs/labextra-ssrf/entorno/intra
+    container_name: cyberlab-ssrf-intra
+    hostname: phantomcorp-intra
+    networks: [internalnet]
+networks:
+  internalnet:
+    name: cyberlab_internalnet
+    internal: true

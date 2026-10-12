@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Fernando Boiero — CyberLab UTN FRVM
 # start.sh — genérico. Arranca el lab: banner, levanta el entorno y abre la guía.
 # No hace falta editarlo: deriva el número y el tema del nombre del directorio.
 set -euo pipefail
@@ -18,7 +20,7 @@ if [ -f "$LABDIR/entorno/target.compose.yml" ]; then
     ui_warn "Docker no está corriendo. Arrancá Docker Desktop y reintentá."
   fi
 else
-  ui_info "Este lab no usa Docker (es de teoría/código)."
+  ui_info "Este lab no levanta entorno Docker (es de teoría/código local)."
 fi
 echo
 ui_info "Guía completa (leela toda antes de tirar comandos):"

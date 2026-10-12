@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Fernando Boiero — CyberLab UTN FRVM
 # ui.sh — helpers de presentación (colores, cajas, barras). Sin dependencias.
 # El color se activa solo si la salida es una terminal (respeta pipes y CI).
 if [ -t 1 ] && [ "${NO_COLOR:-}" = "" ]; then

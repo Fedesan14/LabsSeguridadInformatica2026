@@ -1,0 +1,5 @@
+# Retos del Lab Extra — SSRF.  Formato:  id|titulo|sha256(flag)
+# Entregá con:  ./ctf submit extra R1 'FLAG{...}'
+R1|El server fetchea por vos: panel interno en localhost|c1aaac793a2a56866e9f324b17eb722d6c4b877a4f6522dd5190d66202d07c12
+R2|Descubrir la intranet en la red interna|20f8b9e9ab32c9d1d3254012242fe38786dcef535db67d83aae1b82b9b763edc
+R3|Exfiltrar datos sensibles a traves del SSRF|e11fbbec2fad2a52c57f6f0f82f1070ca2af156bc1b9066f601273ef94506983

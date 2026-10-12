@@ -1,0 +1,5 @@
+# volatility3 linux.sockstat (extracto)
+Proto Local                 Remoto               Estado       PID   Proceso
+tcp   10.0.0.5:80           0.0.0.0:*            LISTEN       812   nginx
+tcp   10.0.0.5:41022        45.13.37.7:4444     ESTABLISHED  1490  nc        <- C2 saliente
+tcp   10.0.0.5:41108        45.13.37.7:80       TIME_WAIT    1201  wget      <- descarga del webshell

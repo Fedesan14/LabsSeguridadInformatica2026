@@ -1,0 +1,49 @@
+# Diagnóstico 05-06 — tus respuestas.
+# Copiá este archivo:  cp docs/diagnostico-respuestas.txt mi-diagnostico.txt
+# Completá a la derecha del = y corré:  python3 bin/diagnostico.py mi-diagnostico.txt
+#
+# ── Bloque A · Fundamentos (labs 01-04). Respondé con UNA letra. ──
+# A1. WannaCry cifró miles de hospitales (no se llevó los datos, los encriptó).
+#     ¿Qué propiedad de la CIA rompió principalmente?
+#       a) Confidencialidad   b) Integridad   c) Disponibilidad   d) Las tres
+A1=
+# A2. Cambiás UN byte de un archivo y su SHA-256 cambia por completo. Eso se llama:
+#       a) Colisión   b) Efecto avalancha   c) Salting   d) Length-extension
+A2=
+# A3. ¿Por qué comparar dos MAC con == (comparación común) es inseguro?
+#       a) Es más lento                 b) Filtra info por el TIEMPO de comparación
+#       c) No funciona con bytes        d) Expone la clave en memoria
+A3=
+# A4. El principio de Kerckhoffs dice que la seguridad debe residir en:
+#       a) el secreto del algoritmo   b) la clave   c) el firewall   d) la ofuscación
+A4=
+# A5. ¿Para qué sirve el salt al guardar contraseñas?
+#       a) Acelera el hash                         b) Dos claves iguales -> hashes distintos
+#       c) Cifra la contraseña (reversible)        d) Reemplaza al hash
+A5=
+# A6. El vector de prueba oficial del RFC 6238 (TOTP) da un código de 8 dígitos.
+#     ¿Cuál es? (si lo implementaste en el lab 03, lo viste)
+A6=
+# A7. El ALE (pérdida anual esperada) se calcula como:
+#       a) impacto × prob. de parcheo          b) pérdida por evento × frecuencia anual
+#       c) costo del control − beneficio       d) riesgo residual × 2
+A7=
+# A8. Adobe 2013, el famoso "pingüino": ¿cuál fue el error de cripto?
+#       a) clave demasiado corta
+#       b) usar ECB / cifrar en vez de hashear (patrones iguales se veían a través)
+#       c) no usar HTTPS
+#       d) usar MD5
+A8=
+#
+# ── Bloque B · ¿Listo para atacar? Esto se contesta OPERANDO el lab 05. ──
+#   Levantá el entorno:   ./ctf lab 05      y luego    make shell
+#   Si no podés levantarlo, dejá estas vacías: ESE es el diagnóstico.
+#
+# B1. Mirá los headers HTTP del puerto 80 de phantomcorp (curl -I http://phantomcorp).
+#     ¿Qué valor EXACTO anuncia el header "Server"?   (ej: Algo/1.2.3)
+B1=
+# B2. Pedí el robots.txt. ¿Qué ruta oculta (Disallow) lista, además de /admin?
+B2=
+# B3. Un barrido COMPLETO de puertos (nmap -p-) encuentra un servicio en un puerto
+#     alto "eleet". ¿Qué número de puerto es?
+B3=

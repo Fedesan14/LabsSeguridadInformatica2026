@@ -1,6 +1,6 @@
 # Laboratorio 09 — Agentes de pentest
 
-**Unidad 9** · <título según programa analítico>
+**Unidad 9** · Inteligencia artificial aplicada a la seguridad ofensiva
 **Modalidad:** grupos de 4 a 5 integrantes
 **Entrega:** fork + Pull Request, en `entregas/lab09/grupoXX/`
 **Entorno:** Docker + una API de LLM (Claude u OpenAI) — o el motor `mock` sin key
@@ -223,3 +223,12 @@ key. Rúbrica en [`docs/rubrica.md`](docs/rubrica.md).
 Un agente ofensivo automatiza intrusión: fuera del lab, el daño (y el delito) se
 automatiza con él. El alcance del agente está limitado por código **a propósito**.
 No lo levantes. Solo la cátedra. Ley 26.388.
+
+---
+
+## Retos bonus (opcional)
+
+¿Estas flags te quedaron cortas? En el
+[banco de retos bonus](../../docs/BANCO-DE-RETOS.md) hay **3 desafíos más para
+este lab**, con más herramientas y dificultad progresiva (★ / ★★ / ★★★). No
+cuentan para la aprobación, pero es donde te hacés bueno de verdad.

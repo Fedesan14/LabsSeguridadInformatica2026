@@ -329,6 +329,20 @@ que no se negocian.**
 
 ---
 
+## Autoevaluación (feedback instantáneo)
+
+Mientras completás los `TODO`, chequeá tu avance sin esperar la corrección:
+
+```bash
+python3 src/verificar.py
+```
+
+**Verde** = va · **rojo** = revisá (te dice qué falló) · **gris** = todavía no lo
+implementaste. No es la nota — es para que **iteres solo**, como con las flags de
+los labs ofensivos.
+
+---
+
 ## Qué se entrega
 
 Dentro de `entregas/lab01/grupoXX/`:
@@ -378,7 +392,7 @@ penalización específica y tiene causales de rechazo automático.
 **Obligatoria**
 
 - Cybrary. *Introduction to IT & Cybersecurity*.
-  https://www.cybrary.it/course/intro-to-cyber-security/
+  https://www.cybrary.it/course/introduction-to-it-and-cybersecurity/
 
 **Referencia técnica para la Parte B**
 
@@ -404,3 +418,12 @@ penalización específica y tiene causales de rechazo automático.
 
 Abrí un **Issue** en este repositorio con la etiqueta `lab01`. Es público: si
 tenés la duda vos, la tienen otros tres grupos.
+
+---
+
+## Retos bonus (opcional)
+
+¿Estas flags te quedaron cortas? En el
+[banco de retos bonus](../../docs/BANCO-DE-RETOS.md) hay **3 desafíos más para
+este lab**, con más herramientas y dificultad progresiva (★ / ★★ / ★★★). No
+cuentan para la aprobación, pero es donde te hacés bueno de verdad.

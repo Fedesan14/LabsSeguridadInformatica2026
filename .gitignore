@@ -47,3 +47,16 @@ credenciales*
 .loot/
 .progreso/
 *.pyc
+
+# --- Respuestas del docente: JAMÁS al repo que clonan los alumnos ---
+# Las soluciones de referencia viven solo en tu copia local (.soluciones-docente/).
+# Si las subís, el práctico pierde todo el sentido: el alumno lee el walkthrough
+# en vez de resolverlo. Este patrón las bloquea a cualquier profundidad.
+solucion.md
+**/solucion.md
+.soluciones-docente/
+
+# --- Node / generadores de presentaciones ---
+node_modules/
+package-lock.json
+npm-debug.log*

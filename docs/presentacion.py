@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Fernando Boiero — CyberLab UTN FRVM
 """
 presentacion.py — CyberLab UTN · presentación de terminal (curses, bien hacker).
 
@@ -75,9 +77,21 @@ SLIDES = [
  {"center": True, "art": (COVER, G), "lines": [
    L(("", W)),
    L(("Práctico de Seguridad Informática — de la tríada CIA a los agentes", W)),
-   L(("autónomos y de vuelta a la defensa. Diez labs + un engagement final.", W)),
+   L(("autónomos, la defensa y la forensia. Once labs + un engagement final.", W)),
    L(("", W)),
    L(("UTN · FRVM   /   Seguridad Informática   /   2026   /   ", D), ("Ing. Fernando Boiero", G)),
+ ]},
+ # NOVEDADES (desde la clase del 04/09)
+ {"kicker": "NOVEDADES · desde la clase del 04/09", "lines": [
+   L(("Sincronizá tu fork y bajá lo nuevo. Nada de lo que ya hiciste cambia.", W)),
+   L(("", W)),
+   L(("1  ", G), ("Presentación de TERMINAL (esta) — matrix, radar, calavera, decode.", D)),
+   L(("2  ", G), ("Guía dinámica de las 11 clases (gancho + ejemplo + dato hacker).", D)),
+   L(("3  ", G), ("Banco de ~30 retos bonus con más tools (★/★★/★★★) por lab.", D)),
+   L(("4  ", G), ("Lab 11 NUEVO — Forensia DFIR: de atacar a investigar.", D)),
+   L(("5  ", G), ("timeline.py — automatizás la línea de tiempo del ataque.", D)),
+   L(("", W)),
+   L(("Cómo seguir  ", A), ("git fetch upstream  &&  git merge upstream/main", C)),
  ]},
  # 2
  {"kicker": "Qué es", "title": "Se aprende haciendo", "lines": [
@@ -96,7 +110,7 @@ SLIDES = [
    L(("[04] ", G), ("Sin atajos                   ", W), ("nadie se hace pentester en dos horas", D)),
  ]},
  # 4
- {"kicker": "El programa · 10 labs + final", "lines": [
+ {"kicker": "El programa · 11 labs + final", "lines": [
    L(("FUNDAMENTOS · CÓDIGO (Python)          ", G), ("OFENSIVA · Docker", C)),
    L(("┌─────────────────────────────┐    ┌─────────────────────────────┐", D)),
    L(("│ 01 Introducción (CIA, hash) │    │ 05 Reconocimiento           │", W)),
@@ -105,6 +119,7 @@ SLIDES = [
    L(("│ 04 Marcos normativos        │    │ 08 Post-explotación         │", W)),
    L(("│                             │    │ 09 Agentes de IA            │", W)),
    L(("│                             │    │ 10 Detección y evasión      │", W)),
+   L(("│                             │    │ 11 Forensia (DFIR)          │", W)),
    L(("└─────────────────────────────┘    └─────────────────────────────┘", D)),
    L(("", W)),
    L(("★ ", A), ("…y todo desemboca en el Práctico Final: engagement + informe.", W)),
@@ -131,6 +146,99 @@ SLIDES = [
    L(("└───────────────────────────────────────────────────┘", D)),
    L(("", W)),
    L(("Las flags te enganchan. ", W), ("El informe es lo que evalúa la rúbrica.", G)),
+ ]},
+ # --- LAS CLASES, UNA POR UNA ---
+ {"center": True, "art": (["  L A S   C L A S E S ", "  ·  una por una  ·  "], G), "lines": [
+   L(("", W)), L(("11 clases + el práctico final. Gancho, idea, ejemplo y dato hacker.", W)),
+   L(("Usá g para saltar directo a la que vas a dar hoy.", D)),
+ ]},
+ {"kicker": "CLASE 01 · INTRODUCCIÓN — tríada CIA   [código]", "lines": [
+   L(("Te roban la base de clientes. ¿QUÉ propiedad se rompió exactamente?", W)),
+   L(("IDEA    ", G), ("todo se para sobre 3 patas: Confidencialidad · Integridad · Disponibilidad.", D)),
+   L(("EJEMPLO ", C), ("WannaCry no robó datos, los CIFRÓ: rompió disponibilidad, no la C.", D)),
+   L(("TOOLS   ", C), ("Python + hashlib · manifiesto de hashes que detecta 1 byte de cambio.", D)),
+   L(("HACÉS   ", G), ("analizás un incidente con la lente CIA + verificador de integridad.", D)),
+   L(("DATO    ", A), ("efecto avalancha: cambiás una coma y el hash es irreconocible.", A)),
+ ]},
+ {"kicker": "CLASE 02 · CRIPTOGRAFÍA   [código]", "lines": [
+   L(("El 99% de las fallas de cripto no es romper AES: es USARLO mal.", W)),
+   L(("IDEA    ", G), ("Kerckhoffs: seguro aunque conozcan todo, menos la clave.", D)),
+   L(("EJEMPLO ", C), ("Adobe 2013: contraseñas con ECB, el 'pingüino' se veía a través.", D)),
+   L(("TOOLS   ", C), ("hashlib · hmac · secrets.", D)),
+   L(("HACÉS   ", G), ("rompés un XOR por frecuencia + MAC con HMAC (length-extension).", D)),
+   L(("DATO    ", A), ("comparar MACs con == filtra el secreto por el TIEMPO. Timing attack.", A)),
+ ]},
+ {"kicker": "CLASE 03 · AUTENTICACIÓN   [código]", "lines": [
+   L(("'¿Sos quien decís ser?' es la puerta de TODO. Si se rompe, nada importa.", W)),
+   L(("IDEA    ", G), ("contraseñas con salt + muchas iteraciones. Nunca en claro ni sha256 pelado.", D)),
+   L(("EJEMPLO ", C), ("LinkedIn 2012: 6,5M en SHA-1 sin salt, reventadas en bloque.", D)),
+   L(("TOOLS   ", C), ("pbkdf2_hmac · hmac · secrets.", D)),
+   L(("HACÉS   ", G), ("PBKDF2 + TOTP (2FA) desde cero, validado contra el RFC 6238.", D)),
+   L(("DATO    ", A), ("el TOTP se basa en el reloj: si tenés la hora corrida, no anda.", A)),
+ ]},
+ {"kicker": "CLASE 04 · MARCOS NORMATIVOS Y RIESGO   [código]", "lines": [
+   L(("'Poné un firewall' NO es una decisión. 'Evita $15k, cuesta $8k' SÍ lo es.", W)),
+   L(("IDEA    ", G), ("no existe 'seguro'; existe riesgo aceptable, medido. ALE = pérdida x frecuencia.", D)),
+   L(("EJEMPLO ", C), ("meteorito: impacto altísimo x prob ínfima = ALE bajo -> lo aceptás.", D)),
+   L(("TOOLS   ", C), ("Python (calculadora de riesgo) · ISO 27001 · NIST CSF.", D)),
+   L(("HACÉS   ", G), ("aplicás un marco a PhantomCorp + calculás ALE y ROI de controles.", D)),
+   L(("DATO    ", A), ("el 'riesgo cero' no existe y buscarlo te funde. Gestionar > temer.", A)),
+ ]},
+ {"kicker": "CLASE 05 · RECONOCIMIENTO   [ofensivo]", "lines": [
+   L(("Antes de robar una casa, el ladrón la mira una semana. Eso es recon.", W)),
+   L(("IDEA    ", G), ("un puerto abierto no es hallazgo; identificado y clasificado, SÍ.", D)),
+   L(("EJEMPLO ", C), ("nmap -p- encuentra el 8081 con un Jenkins viejo sin auth.", D)),
+   L(("TOOLS   ", C), ("nmap · ncat · curl · whois · dig.", D)),
+   L(("HACÉS   ", G), ("mapeás la superficie de PhantomCorp, clasificás contra CVE. 5 flags.", D)),
+   L(("DATO    ", A), ("el puerto 31337 es 'eleet'; casi siempre un backdoor olvidado.", A)),
+ ]},
+ {"kicker": "CLASE 06 · ENUMERACIÓN   [ofensivo]", "lines": [
+   L(("'Hay un web server.' ¿Y? Son decenas de rutas y archivos que no linkeó nadie.", W)),
+   L(("IDEA    ", G), ("todo servicio esconde más de lo que muestra. Preguntá por lo oculto.", D)),
+   L(("EJEMPLO ", C), ("un /.git/ expuesto = el código fuente COMPLETO en tus manos.", D)),
+   L(("TOOLS   ", C), ("dirb · gobuster · whatweb · wfuzz · nmap NSE.", D)),
+   L(("HACÉS   ", G), ("directorios ocultos, .git, métodos HTTP, API de usuarios. 5 flags.", D)),
+   L(("DATO    ", A), ("robots.txt: el archivo que oculta rutas... es un mapa para el atacante.", A)),
+ ]},
+ {"kicker": "CLASE 07 · EXPLOTACIÓN   [ofensivo]", "lines": [
+   L(("¿Cómo pasás de 'veo el login' a 'estoy adentro como admin'? Sin suerte.", W)),
+   L(("IDEA    ", G), ("tu DATO se ejecuta como CÓDIGO cuando se rompe esa frontera.", D)),
+   L(("EJEMPLO ", C), ("user = admin'--  comenta el chequeo de pass. Entraste sin la clave.", D)),
+   L(("TOOLS   ", C), ("curl (a mano) · sqlmap (después de entender). Backend sqlite real.", D)),
+   L(("HACÉS   ", G), ("SQLi, command injection (RCE), path traversal, IDOR. 5 flags.", D)),
+   L(("DATO    ", A), ("TalkTalk 2015: UNA SQLi, 157.000 clientes, multa récord.", A)),
+ ]},
+ {"kicker": "CLASE 08 · POST-EXPLOTACIÓN   [ofensivo]", "lines": [
+   L(("Lograste el RCE. Estás adentro. ¿Y ahora? Un shell es el principio, no el final.", W)),
+   L(("IDEA    ", G), ("escalar a root, pivotear a la red interna, robar credenciales, automatizar.", D)),
+   L(("EJEMPLO ", C), ("find / -perm -4000 -> una copia SUID de bash -> bash -p -> root.", D)),
+   L(("TOOLS   ", C), ("find · curl · scripting. Dos hosts en redes segmentadas.", D)),
+   L(("HACÉS   ", G), ("recon del host, loot, escalada SUID, pivoting a la DB interna. 5 fases.", D)),
+   L(("DATO    ", A), ("el equipo comprometido inicial suele ser irrelevante: el pivot abre el reino.", A)),
+ ]},
+ {"kicker": "CLASE 09 · AGENTES DE PENTEST   [ofensivo · IA]", "lines": [
+   L(("Un 'agente' suena a magia. Es un LOOP de 4 pasos que dibujás en una servilleta.", W)),
+   L(("IDEA    ", G), ("el LLM decide -> guardrail valida -> tool ejecuta -> resultado -> repite.", D)),
+   L(("EJEMPLO ", C), ("el LLM ve 'pedí el token en /api/token', lo pide y lo encadena solo.", D)),
+   L(("TOOLS   ", C), ("cliente agnóstico: Claude · OpenAI · mock (sin API key). Guardrails.", D)),
+   L(("HACÉS   ", G), ("construís y dirigís tu agente con guardrails, y lo auditás.", D)),
+   L(("DATO    ", A), ("sin guardrail, el agente escanea un host de terceros que 'vio'. Peligroso.", A)),
+ ]},
+ {"kicker": "CLASE 10 · DETECCIÓN Y EVASIÓN   [Blue vs Red]", "lines": [
+   L(("5 clases fuiste el atacante. Date vuelta: del otro lado siempre miraron.", W)),
+   L(("IDEA    ", G), ("el IDS detecta por FIRMAS: poderoso pero frágil, solo ve lo que conoce.", D)),
+   L(("EJEMPLO ", C), ("firma detecta 'UNION SELECT'; UNION/**/SELECT la evade. Mismo ataque.", D)),
+   L(("TOOLS   ", C), ("target IDS/SOC · curl para evadir · análisis de logs.", D)),
+   L(("HACÉS   ", G), ("disparás, evadís una firma, y cazás una intrusión en el ruido. 5 retos.", D)),
+   L(("DATO    ", A), ("en casi toda brecha, la evidencia estaba en los logs desde el día uno.", A)),
+ ]},
+ {"kicker": "CLASE 11 · FORENSIA DEL PENTEST (DFIR)   [defensivo]", "lines": [
+   L(("El atacante entró, hizo su desastre y se fue. ¿Qué tocó? ¿Sigue adentro?", W)),
+   L(("IDEA    ", G), ("reconstruir lo que pasó desde la evidencia: RAM, disco, logs. Cadena de custodia.", D)),
+   L(("EJEMPLO ", C), ("borró el historial, pero en la RAM sigue el proceso y la conexión abierta.", D)),
+   L(("TOOLS   ", C), ("Volatility (memoria) · imagen de disco · timeline de logs · hashing.", D)),
+   L(("HACÉS   ", G), ("analizás RAM y disco, armás la línea de tiempo, extraés IOCs, documentás.", D)),
+   L(("DATO    ", A), ("Locard: 'todo contacto deja un rastro'. La RAM se pierde al apagar. Corré.", A)),
  ]},
  # 7
  {"kicker": "05–08 · a mano, siempre primero", "title": "El pentest, sin atajos", "lines": [

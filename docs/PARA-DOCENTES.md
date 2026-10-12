@@ -46,6 +46,33 @@ make down
 Regla de oro de autoría: **si una flag no se puede obtener con las tools tal como
 la guía lo indica, el lab no está listo.** Probalo vos antes que ellos.
 
+## Rotar las flags (por cohorte, o si se filtraron)
+
+Si sospechás que alguien vio las soluciones, o simplemente querés flags nuevas
+para otra cohorte, no hace falta editar a mano cada target. Usá el rotador:
+
+```bash
+bin/rotar-flags.py                 # DRY-RUN: muestra qué cambiaría, no escribe
+bin/rotar-flags.py --lab 07        # solo un lab
+bin/rotar-flags.py --apply         # aplica en todos los labs
+bin/rotar-flags.py --random --apply  # flags opacas FLAG{<hex>} en vez de slug
+```
+
+Qué hace, sin romper nada:
+
+- Cambia el **valor** de cada flag y recalcula su `sha256` en el `retos.manifest`.
+  Detecta la codificación de cada target (base64, claro o URL-encoded) y respeta
+  la que corresponde.
+- En el **Lab 11** recalcula la cadena de custodia (`evidencia.sha256`) de los
+  archivos que toca, pero **respeta el hash falso de `auth.log`** — ese "fallo"
+  de custodia es el reto R5.
+- Deja el nuevo answer-key en `.soluciones-docente/FLAGS-<fecha>.txt`
+  (gitignoreado, nunca se sube).
+
+Después de `--apply`, **reconstruí las imágenes Docker** (`make setup` / rebuild
+del lab) para que los targets sirvan las flags nuevas. Y verificá un reto de
+punta a punta, como siempre.
+
 ## Crear un laboratorio nuevo
 
 El molde está en `labs/_plantilla/`. El procedimiento completo, en

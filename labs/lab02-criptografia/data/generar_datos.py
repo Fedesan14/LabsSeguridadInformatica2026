@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Fernando Boiero — CyberLab UTN FRVM
 """Genera el reto de la Parte B: un texto cifrado con XOR de 1 byte para romper.
 Corré: python3 data/generar_datos.py  -> crea data/muestra/reto_xor.hex"""
 import os

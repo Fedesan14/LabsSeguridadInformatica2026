@@ -1,0 +1,92 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Fernando Boiero — CyberLab UTN FRVM
+# CI del curso: valida el repo y, en PRs de entrega, las reglas de contribución.
+name: Validación
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  repo-sano:
+    name: Salud del repositorio
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compilar Python, validar shell, manifests y docs
+        run: ./bin/validar-repo.sh
+
+  reglas-entrega:
+    name: Reglas de entrega (PRs de grupos)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verificar archivos tocados por el PR
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          ASSOCIATION: ${{ github.event.pull_request.author_association }}
+        run: |
+          set -uo pipefail
+          # Los PRs del docente/ayudantes no tienen restricción de rutas.
+          if [ "$ASSOCIATION" = "OWNER" ] || [ "$ASSOCIATION" = "MEMBER" ]; then
+            echo "PR de @$AUTHOR ($ASSOCIATION): sin restricción de rutas."
+            exit 0
+          fi
+          echo "PR de @$AUTHOR — verificando reglas de entrega..."
+          cambiados="$(git diff --name-only "$BASE" "$HEAD")"
+          echo "$cambiados" | sed 's/^/  /'
+          errores=0
+
+          # Regla 1: solo se toca entregas/labNN/grupoXX/
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            if ! echo "$f" | grep -qE '^entregas/lab[0-9a-z]+/grupo[0-9]+/'; then
+              echo "::error file=$f::Fuera de tu directorio de entrega. Solo podés modificar entregas/labNN/grupoXX/ — nunca el enunciado ni archivos de otro grupo."
+              errores=$((errores+1))
+            fi
+          done <<< "$cambiados"
+
+          # Regla 2: nunca modificar enunciados, motor ni flags
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            case "$f" in
+              labs/*|bin/*|ctf|Makefile|docs/*|entorno/*|.github/*)
+                echo "::error file=$f::Este archivo es del enunciado/motor del curso y no se modifica."
+                errores=$((errores+1));;
+            esac
+          done <<< "$cambiados"
+
+          # Regla 3: no subir secretos
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            case "$f" in
+              *.key|*.pem|.env|*.env.*|secrets.json)
+                echo "::error file=$f::Posible secreto. Las claves NUNCA se suben al repo."
+                errores=$((errores+1));;
+            esac
+          done <<< "$cambiados"
+
+          if [ "$errores" -gt 0 ]; then
+            echo "El PR toca $errores archivo(s) fuera de las reglas. Ver CONTRIBUTING.md."
+            exit 1
+          fi
+          echo "Reglas de entrega OK."
+
+      - name: Compilar el código Python de la entrega
+        run: |
+          errores=0
+          while IFS= read -r f; do
+            [ -f "$f" ] || continue
+            python3 -m py_compile "$f" 2>&1 || errores=$((errores+1))
+          done < <(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" -- 'entregas/**/*.py')
+          [ "$errores" -eq 0 ] && echo "El Python de la entrega compila."

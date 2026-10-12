@@ -404,3 +404,12 @@ provee la cátedra, dentro de tu máquina. Ejecutar reconocimiento activo
 (`nmap`, banner grabbing, etc.) contra sistemas de terceros sin autorización
 escrita constituye delito en Argentina (Ley 26.388). El recon *parece* inofensivo
 —"solo miré"— pero el escaneo activo es acceso no autorizado. No lo hagas.
+
+---
+
+## Retos bonus (opcional)
+
+¿Estas flags te quedaron cortas? En el
+[banco de retos bonus](../../docs/BANCO-DE-RETOS.md) hay **3 desafíos más para
+este lab**, con más herramientas y dificultad progresiva (★ / ★★ / ★★★). No
+cuentan para la aprobación, pero es donde te hacés bueno de verdad.

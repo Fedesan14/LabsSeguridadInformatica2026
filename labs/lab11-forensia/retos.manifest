@@ -1,0 +1,7 @@
+# Retos del Lab 11 — Forensia (DFIR). Hallazgos de la investigación. id|titulo|sha256(flag)
+# Se resuelven analizando la evidencia en caso/ con tus tools. ./ctf submit 11 R1 'FLAG{...}'
+R1|Vector de entrada (SQLi -> RCE) en los logs|5407697c94f8ba94a9499eafd2a00ca39c711f3b1e6f5d8598a1a1a12715c50c
+R2|El webshell dropeado en el disco|872e458174f77a07126699cffbb6459d60f76ac6c4835539d20f3c448b390f72
+R3|Escalada de privilegios (SUID) en memoria|b243d3b8c807b07b91a0f3b9343d594d154f9b37b123d69b65ebc4abf103a299
+R4|Conexion C2 y exfiltracion de datos|c0ee05a7153c7616282fa12707ff1a5703e2c0d9573fb3f6540cdbb01f763c9b
+R5|Cadena de custodia: evidencia alterada|c17f070d5c942eb861bb2302b4c7e7a7dd810048384a28c73433c5691d228dc6

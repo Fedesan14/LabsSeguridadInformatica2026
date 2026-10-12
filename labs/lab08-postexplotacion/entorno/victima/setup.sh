@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Fernando Boiero — CyberLab UTN FRVM
 # setup.sh — prepara el host comprometido (corre como root en el build).
 set -e
 d() { echo "$1" | base64 -d; }   # des-ofusca una flag

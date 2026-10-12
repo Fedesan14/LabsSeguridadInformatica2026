@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Fernando Boiero — CyberLab UTN FRVM
 # CyberLab UTN — orquestación de entornos Docker.
 # Uso rápido:
 #   make setup          construye la consola del atacante (una sola vez)

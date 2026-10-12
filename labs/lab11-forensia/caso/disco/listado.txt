@@ -1,0 +1,7 @@
+# find /var /tmp /etc -newermt "2026-09-05 02:14" -printf "%TY-%Tm-%Td %TH:%TM  %s  %p\n"
+# (archivos creados/modificados DESPUES del inicio del ataque)
+2026-09-05 02:18  12     /tmp/.p
+2026-09-05 02:19  431    /var/www/uploads/shell.php
+2026-09-05 02:21  1113504 /usr/local/bin/system-check      (SUID root - copia de bash)
+2026-09-05 02:22  62     /etc/cron.d/phantom-maint         (persistencia)
+2026-09-05 02:23  48210  /tmp/.exfil/clientes.tar.gz        (datos preparados para exfiltrar)

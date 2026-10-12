@@ -91,7 +91,30 @@ frena?** ¿Y qué **no** protege el TOTP?
 
 ---
 
+## Autoevaluación (feedback instantáneo)
+
+Mientras completás los `TODO`, chequeá tu avance sin esperar la corrección:
+
+```bash
+python3 src/verificar.py
+```
+
+**Verde** = va · **rojo** = revisá (te dice qué falló) · **gris** = todavía no lo
+implementaste. No es la nota — es para que **iteres solo**, como con las flags de
+los labs ofensivos.
+
+---
+
 ## Qué se entrega
 
 `informe.md` (Parte A + respuestas B) y `src/auth.py` completado.
 Rúbrica en [`docs/rubrica.md`](docs/rubrica.md). Ley 26.388 · uso responsable.
+
+---
+
+## Retos bonus (opcional)
+
+¿Estas flags te quedaron cortas? En el
+[banco de retos bonus](../../docs/BANCO-DE-RETOS.md) hay **3 desafíos más para
+este lab**, con más herramientas y dificultad progresiva (★ / ★★ / ★★★). No
+cuentan para la aprobación, pero es donde te hacés bueno de verdad.

@@ -1,0 +1,6 @@
+# Retos del Lab Extra 4 — Cracking de contraseñas.  id|titulo|sha256(flag)
+# Crackeá sombra.txt, abrí el loot de cada usuario y entregá la flag:
+#   ./ctf submit extra4 R1 'FLAG{...}'
+R1|MD5 + diccionario (caida instantanea)|e72bbad9867866c30e8f9275675258097e5935ddae9799f87f134df7f401a1d4
+R2|SHA-256 + diccionario|3c1d642061255dadf097fa26ce4f96daa879b0b6e02d9939fe00775492de97c2
+R3|SHA-256 + regla de mangling (no esta literal en el diccionario)|891c8efc2276c36579bffbe3258d7f99292b5009c0e1644dfa7f256bf385edb3
