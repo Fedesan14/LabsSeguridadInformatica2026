@@ -1,15 +1,15 @@
 # Informe — Laboratorio 02 · Criptografía
 
-**Grupo:** 03 · **Fecha:** `TODO-FECHA-DE-ENTREGA`
+**Grupo:** 03 · **Fecha:** `12-10-2026`
 
 ### Integrantes
 
 | Nombre y apellido | Legajo | Usuario de GitHub |
 |---|---|---|
-| Federico Sánchez | `TODO-LEGAJO` | @Fedesan14 |
-| Elian Enria | `TODO-LEGAJO` | `TODO-USUARIO` |
-| Efraín Host | `TODO-LEGAJO` | @hostefrain |
-| Lohana Rumis | `14646` | `@Lohana-Rumis` |
+| Federico Sánchez | `13614` | @Fedesan14 |
+| Elian Enria | `13245` | @elian-enria-id |
+| Efraín Host | `18273` | @hostefrain |
+| Lohana Rumis | `14646` | @Lohana-Rumis |
 
 ### Distribución del trabajo
 
