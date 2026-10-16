@@ -77,9 +77,13 @@ def hotp(secret: bytes, contador: int, digitos: int = 6, algo: str = "sha1") -> 
 
 def totp(secret: bytes, t: int = None, paso: int = 30, digitos: int = 6) -> str:
     """TOTP (RFC 6238): HOTP usando como contador el tiempo dividido en pasos.
-    Pista: contador = t // paso. Si t es None, usá time.time()."""
-    # TODO
-    raise NotImplementedError("Completá totp()")
+
+    El contador es la cantidad de pasos de `paso` segundos transcurridos desde
+    la época Unix: servidor y cliente lo calculan cada uno con su reloj, sin
+    intercambiar nada, y por eso el código cambia solo cada 30 segundos.
+    Se compara con `is None` y no con `not t` porque t=0 es un instante válido.
+    """
+    return hotp(secret, int(time.time() if t is None else t) // paso, digitos)
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Autenticación (Lab 03).")
