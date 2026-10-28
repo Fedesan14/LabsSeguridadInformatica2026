@@ -1,0 +1,7 @@
+[
+  {"nombre": "Fuga de tarjetas y DNI por explotacion del servidor web publico", "sle": 120000, "aro": 0.3},
+  {"nombre": "Intrusion por acceso remoto sin MFA (credenciales robadas)", "sle": 60000, "aro": 0.5},
+  {"nombre": "Ransomware que cifra los servidores y el disco de backup", "sle": 80000, "aro": 0.25},
+  {"nombre": "Perdida del disco de backup por robo o incendio en la oficina", "sle": 30000, "aro": 0.05},
+  {"nombre": "Caida del sitio web por DDoS", "sle": 2500, "aro": 0.5}
+]
