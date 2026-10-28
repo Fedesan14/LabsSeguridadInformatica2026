@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /admin
+Disallow: /panel-interno-9x2f
+# Recordatorio infra: /panel-interno-9x2f sigue accesible desde afuera. Migrar a VPN.
