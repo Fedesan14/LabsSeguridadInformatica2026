@@ -73,4 +73,42 @@ python3 src/recolector.py --base http://phantomcorp-db --desde 1 --hasta 250
 
 ## 4. Preguntas de análisis
 
-Las respuestas se desarrollan en el siguiente commit de la entrega.
+### P1 — SUID y el flag `-p`
+
+SUID ejecuta un archivo con el UID efectivo de su propietario, no con el del
+usuario que lo invoca. Si el propietario es root, un binario configurado de
+forma insegura puede escalar privilegios. `system-check` es Bash con SUID; `-p`
+conserva los privilegios efectivos en vez de descartarlos cuando UID real y
+efectivo difieren. Por eso pudo leerse un archivo de root. La mitigación es
+quitar el SUID innecesario y auditar los que deban mantenerse.
+
+### P2 — Pivoting
+
+La consola atacante está fuera de la red de `phantomcorp-db`; la víctima sí
+tiene conectividad y resolución DNS hacia esa red interna. Ejecutar `curl` desde
+la víctima usa ese host comprometido como trampolín. La base no estaba expuesta
+a Internet, pero la segmentación fue insuficiente porque el servidor web podía
+consultarla sin controles adicionales.
+
+### P3 — Secretos en `.env` y `.bash_history`
+
+Las credenciales no deben guardarse en texto plano ni terminar en el historial.
+Usaríamos un gestor de secretos con acceso por identidad, secretos dinámicos o
+de vida corta y rotación automática. La aplicación debe recibirlos sólo al
+ejecutarse y con permisos mínimos. Tras una exposición corresponde revocar y
+rotar las credenciales, no sólo ocultar el archivo.
+
+### P4 — Decisiones humanas que el script no toma
+
+El script sólo repite una decisión previa: consultar IDs 1–250 y reconocer una
+flag. No decide si el host está autorizado, qué rango es proporcional, qué
+endpoint conviene, ni cómo actuar frente a datos inesperados. Tampoco define
+tasas, reintentos ni límites. Esas decisiones requieren contexto, autorización y
+juicio humano; automatizar no delega la responsabilidad.
+
+### P5 — Defensas para SUID y pivoting
+
+Para SUID: `chmod u-s`, inventario y revisión periódica de binarios SUID/SGID,
+y reemplazo por comandos específicos que validen argumentos. Para pivoting:
+microsegmentación, reglas de ingreso y egreso por servicio/puerto, autenticación
+mutua hacia la base y monitoreo de conexiones anómalas entre segmentos.
