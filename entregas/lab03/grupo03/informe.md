@@ -2,10 +2,13 @@
 
 **Grupo:** 03
 
+**Mini-research:** tema **A**, PBKDF2 vs bcrypt vs scrypt vs Argon2: por qué
+existen "hashes lentos" ([`research.md`](research.md)).
+
 ## 0. Declaración de uso de IA
 
-Se utilizó como apoyo para
-localizar documentación técnica, estructurar y redactar el informe.
+Claude Code (Anthropic, modelo Opus 5) para consultas varias durante el desarrollo (dudas conceptuales, dudas de sintaxis), ayuda para la redacción de algunas secciones del informe.
+GitHub Copilot con modelo Claude Sonnet 5 para consultas varias durante el desarrollo (dudas conceptuales, dudas de sintaxis) y revisiones de código ya escrito.
 
 ## 1. Parte A — Análisis de la brecha
 
@@ -169,6 +172,93 @@ un recurso protegido.
 7. OWASP. [*Webhook Security Cheat Sheet — Signature Verification*](https://cheatsheetseries.owasp.org/cheatsheets/Webhook_Security_Cheat_Sheet.html#signature-verification).
 
 ## 2. Parte B.1 — Contraseñas (por qué salt por usuario, por qué muchas iteraciones)
+
+### Implementación
+
+```python
+if salt is None:
+    salt = secrets.token_bytes(16)
+dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iters)
+return f"pbkdf2_sha256${iters}${salt.hex()}${dk.hex()}"
+```
+
+`hash_password()` guarda un registro con cuatro campos separados por `$`: el
+algoritmo, las iteraciones, el salt y la clave derivada, todo en hexadecimal.
+El salt se genera con `secrets.token_bytes()` y no con `random`, porque
+`random` usa un generador no criptográfico (Mersenne Twister), predecible si
+se conoce parte de su estado; `secrets` usa la fuente de aleatoriedad del
+sistema operativo. `verify_password()` separa esos cuatro campos del registro
+almacenado, vuelve a derivar la clave con el mismo salt y la misma cantidad de
+iteraciones, y compara el resultado con `hmac.compare_digest()` en vez de
+`==`, por la misma razón de la Parte A: una comparación que corta al primer
+byte distinto es un oráculo de tiempo.
+
+### ¿Por qué un salt aleatorio por usuario?
+
+Sin salt, `hash(password)` da el mismo resultado para dos usuarios con la
+misma contraseña, y ese mismo resultado se repite en cualquier otro sistema
+que use la misma función de hash. Esto permite dos ataques distintos:
+
+- **Tablas precalculadas (rainbow tables).** Un atacante puede calcular de
+  antemano el hash de millones de contraseñas comunes una sola vez y después
+  buscar coincidencias instantáneas contra toda una base de datos filtrada.
+  RFC 8018 (PKCS#5 v2.1) describe exactamente este problema: sin salt "es
+  difícil para un atacante precalcular todas las claves, o incluso las más
+  probables, correspondientes a un diccionario de contraseñas". El salt
+  rompe esa posibilidad porque cada contraseña necesita su propia tabla.
+- **Reconocimiento de contraseñas repetidas.** Con el mismo salt (o sin
+  salt), dos hashes idénticos en la base de datos delatan que dos usuarios
+  comparten contraseña, sin que haga falta romper ninguna. Con salt por
+  usuario, `hash_password("misma")` da un resultado distinto cada vez; la
+  prueba automática del lab (`t_pwd_salt` en `verificar.py`) comprueba
+  justamente esto.
+
+El salt no es secreto: se guarda junto al hash, en texto plano. Su función no
+es esconder nada, es forzar a que el costo del ataque escale con la cantidad
+de usuarios, en vez de pagarse una sola vez para toda la base.
+
+### ¿Por qué 200.000 iteraciones y no una sola?
+
+Una sola iteración de SHA-256 es barata: una GPU de gama media calcula miles
+de millones de hashes SHA-256 por segundo, y las contraseñas reales tienen
+poca entropía (patrones, palabras de diccionario, variantes predecibles), así
+que un atacante con la base de datos filtrada puede probar un diccionario
+completo en minutos. PBKDF2 repite la derivación miles de veces
+deliberadamente para que cada intento sea miles de veces más caro, sin que la
+persona que inicia sesión legítimamente note la diferencia (sigue siendo del
+orden de milisegundos).
+
+El número concreto subió con el tiempo porque el hardware se abarata: NIST
+SP 800-63B (2017) pedía un mínimo histórico de 10.000 iteraciones, y OWASP
+recomienda hoy, para PBKDF2-HMAC-SHA256, al menos 600.000 iteraciones si se
+necesita cumplir FIPS 140 (y prioriza Argon2id o scrypt para los casos sin esa
+restricción). El valor por defecto del lab, 200.000, es un punto intermedio
+razonable para el ejercicio, pero en un sistema real conviene medir el tiempo
+de verificación en el hardware del servidor y subir las iteraciones hasta el
+máximo que la latencia tolere, como indica RFC 8018.
+
+### Verificación
+
+```bash
+$ python3 src/auth.py hash --password 'Phantom-2026!'
+pbkdf2_sha256$200000$36021bcf00b059401e2d040b0cdbcd0b$91f3d2c2eec0c474a9fcb34c3e60d1776907b68f06e9c44d0cad891b5ddee449
+
+$ python3 src/auth.py verify --password 'Phantom-2026!' --registro 'pbkdf2_sha256$200000$36021bcf00b059401e2d040b0cdbcd0b$91f3d2c2eec0c474a9fcb34c3e60d1776907b68f06e9c44d0cad891b5ddee449'
+OK            # exit code 0
+
+$ python3 src/auth.py verify --password 'otra-cosa' --registro 'pbkdf2_sha256$200000$36021bcf00b059401e2d040b0cdbcd0b$91f3d2c2eec0c474a9fcb34c3e60d1776907b68f06e9c44d0cad891b5ddee449'
+FALLO         # exit code 1
+```
+
+### Fuentes de B.1
+
+| # | Fuente |
+|---|---|
+| [1] | Moriarty, K., Kaliski, B., & Rusch, A. (2017). *RFC 8018 — PKCS #5: Password-Based Cryptography Specification Version 2.1.* IETF. Define PBKDF2 y el rol del salt y las iteraciones. |
+| [2] | NIST (2017, actualizada). *SP 800-63B — Digital Identity Guidelines: Authentication and Lifecycle Management.* Sección 5.1.1.2: requisitos de salt (≥32 bits) e iteraciones (≥10.000) para verificadores de secretos memorizados. |
+| [3] | OWASP Foundation. *Password Storage Cheat Sheet.* Recomendación actual de parámetros para PBKDF2, bcrypt, scrypt y Argon2id. |
+| [4] | Python Software Foundation. [`hashlib.pbkdf2_hmac`](https://docs.python.org/3/library/hashlib.html#hashlib.pbkdf2_hmac) y [`secrets`](https://docs.python.org/3/library/secrets.html), documentación de la biblioteca estándar. |
+
 ## 3. Parte B.2 — TOTP (por qué frena el robo de contraseña; qué NO protege)
 
 *Responsable: Elian Enria.*
@@ -231,6 +321,49 @@ el teléfono, no en la base de datos de contraseñas ni en la cabeza del usuario
   limitación de intentos en el servidor, un atacante con la contraseña puede
   recorrer los códigos dentro de la ventana.
 
+### Verificación en el servidor y control de acceso
+
+*Responsable: Lohana Rumis — Integración, pruebas y entrega.*
+
+Todo lo anterior (hash con salt, comparación en tiempo constante, código TOTP)
+solo cierra la autenticación. Queda una pregunta distinta: una vez que el
+servidor sabe **quién** está del otro lado, ¿quién decide **qué** puede hacer
+esa identidad con cada recurso? Esa decisión es autorización, y tiene que
+tomarse exclusivamente en el servidor.
+
+- **El cliente no es confiable.** Cualquier chequeo que viva en el navegador o
+  en la app, ocultar un botón, deshabilitar un campo, un `if rol === "admin"`
+  en JavaScript, es cosmético: el atacante controla por completo las
+  peticiones que su cliente envía (`curl`, Burp Suite, las DevTools) y puede
+  mandar exactamente la petición que el control visual intentaba impedir. El
+  servidor tiene que volver a comprobar el permiso sobre cada petición que
+  recibe, sin asumir que si "no se mostraba el botón" nadie va a pedirlo.
+- **Un login válido no autoriza todo lo que sigue.** El código TOTP, al igual
+  que la contraseña, solo se usa una vez, al autenticar la sesión. Cada acción
+  posterior sobre un recurso (leer la factura de un cliente, borrar un
+  usuario, cambiar una contraseña ajena) necesita su propio chequeo de
+  autorización en el servidor: que la sesión sea válida identifica a la
+  persona, no le da automáticamente acceso a los datos de otra. Omitir esta
+  verificación por recurso es la causa típica de un **IDOR** (*Insecure Direct
+  Object Reference*): el usuario autenticado cambia un identificador en la URL
+  o el payload (por ejemplo `factura_id=1042` por `factura_id=1043`) y el
+  servidor entrega el recurso de otra cuenta porque solo chequeó que había
+  sesión, no que esa sesión fuera dueña de ese recurso. OWASP agrupa esta
+  familia de fallas bajo **A01:2021 — Broken Access Control**, la categoría más
+  frecuente de su Top 10 2021.
+- **Por qué esto conecta con la Parte A y la B.2.** La Parte A mostró que
+  autenticar mal (comparación insegura de un MAC) permite falsificar una
+  identidad; esta sección muestra el otro lado: aunque la autenticación sea
+  perfecta, contraseña con PBKDF2, 2FA con TOTP, un control de acceso que
+  confía en el cliente, o que no revalida permisos en cada acción, deja pasar
+  a cualquier usuario autenticado (legítimo o atacante que ya robó una sesión)
+  hacia recursos que no le corresponden. Autenticación y autorización son
+  controles independientes y los dos tienen que estar bien para que el
+  sistema sea seguro.
+- **Regla práctica.** Denegar por defecto (*fail closed*): si el servidor no
+  puede verificar explícitamente que la identidad autenticada tiene permiso
+  sobre ese recurso específico, la respuesta es rechazar, no permitir.
+
 ### Fuentes de B.2
 
 | # | Fuente |
@@ -239,11 +372,23 @@ el teléfono, no en la base de datos de contraseñas ni en la cabeza del usuario
 | [2] | M'Raihi, D., Bellare, M., Hoornaert, F., Naccache, D., & Ranen, O. (2005). *RFC 4226 — HOTP: An HMAC-Based One-Time Password Algorithm.* IETF. |
 | [3] | NIST (2017, actualizada). *SP 800-63B — Digital Identity Guidelines: Authentication and Lifecycle Management.* Autenticadores OTP y resistencia a phishing. |
 | [4] | OWASP. *Multifactor Authentication Cheat Sheet.* |
+| [5] | OWASP Foundation. (2021). [*A01:2021 — Broken Access Control.*](https://owasp.org/Top10/2021/A01_2021-Broken_Access_Control/) OWASP Top 10. |
+
 ## 4. Bitácora de comandos
 
-### B.2 — TOTP
+*Control de calidad: Lohana Rumis — Integración, pruebas y entrega. Corrida
+completa con Python 3.12 sobre `entregas/lab03/grupo03/`.*
 
 ```bash
+$ python3 src/verificar.py
+
+== Lab 03 · Autenticación ==
+  ✓ hash_password / verify_password
+  ✓ salt por usuario (hashes distintos)
+  ✓ totp coincide con el vector del RFC 6238
+
+3 OK · 0 a revisar · 0 sin implementar
+
 $ python3 src/auth.py totp --secret 12345678901234567890 --t 59
 287082
 
@@ -257,3 +402,6 @@ $ python3 test_totp.py
 
 6 pruebas OK
 ```
+
+Los comandos de `hash`/`verify` (B.1) quedaron junto a su explicación, en la
+sección 2, para no repetir la misma transcripción dos veces.
