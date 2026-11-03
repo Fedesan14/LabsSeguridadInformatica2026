@@ -1,0 +1,6 @@
+$ curl -s -D - -o /dev/null http://127.0.0.1:18356/   (ORIGINAL sin parchar)
+HTTP/1.0 200 OK
+Server: PhantomServer/2.4.1-debug 
+Date: Tue, 03 Nov 2026 16:27:49 GMT
+Content-Type: text/html; charset=utf-8
+

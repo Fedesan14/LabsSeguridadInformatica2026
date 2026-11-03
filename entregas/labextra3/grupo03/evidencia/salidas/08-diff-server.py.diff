@@ -1,0 +1,154 @@
+--- labs/labextra3-hardening/objetivo/server.py	2026-11-02 18:24:18.481882600 -0300
++++ entregas/labextra3/grupo03/objetivo/server.py	2026-11-03 13:54:58.147259100 -0300
+@@ -2,23 +2,11 @@
+ # SPDX-License-Identifier: AGPL-3.0-or-later
+ # Copyright (C) 2026 Fernando Boiero — CyberLab UTN FRVM
+ """
+-objetivo/server.py — PhantomCorp "vulnerable", Lab Extra 3 (hardening).
++objetivo/server.py — PhantomCorp, copia PARCHADA del Grupo 03 (Lab Extra 3).
+ 
+-Esta app tiene CINCO problemas que ya conocés de los labs 05-07:
+-
+-  D1  El header Server canta producto y versión          (banner/info leak)
+-  D2  /api/status expone debug:true y datos internos     (servicio dev en prod)
+-  D3  /robots.txt lista rutas sensibles y /backup responde 200
+-  D4  /login es vulnerable a SQLi (bypass con ' OR 1=1 --)
+-  D5  /descargar?archivo= permite path traversal (../../etc)
+-
+-TU TRABAJO: copiá esta carpeta a tu entrega y PARCHÁLA ahí. No modifiques este
+-original: es la referencia "rota". Cuando tu copia esté endurecida, corré:
+-
+-  python3 labs/labextra3-hardening/verificar-defensa.py --dir entregas/labextra3/grupoXX/objetivo
+-
+-El verificador ATACA tu copia. Por cada ataque que YA NO FUNCIONA, te muestra
+-la flag defensiva para entregar con ./ctf submit extra3.
++Las cinco defensas D1-D5 originales del objetivo "roto" quedaron resueltas acá
++con fixes estructurales (no cosméticos). Ver informe.md para el detalle de
++cada una (antes/después, diff, verificación).
+ """
+ import base64
+ import os
+@@ -26,10 +14,11 @@
+ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+ from urllib.parse import urlparse, parse_qs
+ 
+-VERSION = "PhantomServer/2.4.1-debug"   # D1: banner que canta todo
+-
+ DB = "/tmp/phantom_hardening.db"
+ DESCARGAS = "/tmp/phantom_descargas"    # raíz "pública" de /descargar
++# D5: directorio real y normalizado una sola vez, para confinar por PATH
++# RESUELTO (no por substrings del nombre pedido, que se pueden ofuscar).
++DESCARGAS_REAL = os.path.realpath(DESCARGAS)
+ 
+ 
+ def init_db():
+@@ -46,9 +35,27 @@
+ 
+ 
+ class Handler(BaseHTTPRequestHandler):
+-    server_version = VERSION            # D1
++    # D1: no seteamos server_version/sys_version con producto+versión, y
++    # además pisamos version_string() más abajo para que el header Server
++    # no exista en absoluto (no solo "menos informativo": ausente).
++    server_version = ""
+     sys_version = ""
+ 
++    def version_string(self):
++        # D1: sin esto, BaseHTTPRequestHandler arma igual un header Server
++        # con server_version+sys_version. Lo neutralizamos en la fuente.
++        return ""
++
++    def send_response(self, code, message=None):
++        # D1: send_response() de la clase base agrega SIEMPRE un header
++        # Server con version_string(). Lo reescribimos para no emitirlo
++        # (no "vaciarlo": sacarlo del todo es el fix real, no cosmético).
++        # Mantenemos log_request() igual que la clase base: no es parte
++        # del fix, y log_message() ya es un no-op en esta clase.
++        self.log_request(code)
++        self.send_response_only(code, message)
++        self.send_header("Date", self.date_time_string())
++
+     def do_GET(self):
+         path, _, qs = self.path.partition("?")
+         params = parse_qs(qs)
+@@ -56,38 +63,48 @@
+         if path == "/":
+             self._html(200, "<h1>PhantomCorp</h1><p>Portal de empleados.</p>")
+         elif path == "/robots.txt":
+-            # D3: el robots delata las rutas sensibles
+-            self._txt(200, "User-agent: *\nDisallow: /backup\nDisallow: /api/status\n")
+-        elif path == "/backup":
+-            # D3: y la ruta sensible responde sin autenticación
+-            self._txt(200, "dump_pre_migracion: usuarios=1 OK — BORRAR ESTE ENDPOINT")
+-        elif path == "/api/status":
+-            # D2: endpoint de debug en producción
+-            self._json(200, '{"debug": true, "env": "produccion", '
+-                            '"db": "' + DB + '", "pid": ' + str(os.getpid()) + '}')
++            # D3: ya no hay rutas sensibles que listar (se eliminaron abajo).
++            self._txt(200, "User-agent: *\n")
+         elif path == "/login":
+-            # D4: SQLi clásico — consulta por interpolación de strings
++            # D4: consulta PARAMETRIZADA. El motor separa código de datos:
++            # lo que venga en user/pwd nunca se interpreta como SQL, sea lo
++            # que sea que contenga (comillas, --, OR 1=1, etc).
+             user = params.get("user", [""])[0]
+             pwd = params.get("pass", [""])[0]
+             db = sqlite3.connect(DB)
+             cur = db.execute(
+-                "SELECT user FROM usuarios WHERE user = '" + user
+-                + "' AND password = '" + pwd + "'")     # ¡NUNCA así!
++                "SELECT user FROM usuarios WHERE user = ? AND password = ?",
++                (user, pwd),
++            )
+             if cur.fetchone():
+                 self._html(200, "<h1>Bienvenido, " + user + "</h1>")
+             else:
+                 self._html(401, "<h1>Credenciales inválidas</h1>")
+             db.close()
+         elif path == "/descargar":
+-            # D5: path traversal — concatena y lee sin validar
++            # D5: confinamos por PATH RESUELTO, no por filtrar el string
++            # pedido. Cualquier forma de escribir ".." (literal, %2e%2e%2f
++            # ya decodeado por parse_qs, "....//", absoluto, symlink) termina
++            # en un path real; si ese path real no cae DENTRO de
++            # DESCARGAS_REAL, se rechaza, sin importar cómo se escribió.
+             nombre = params.get("archivo", [""])[0]
+-            ruta = DESCARGAS + "/" + nombre
++            destino = os.path.realpath(os.path.join(DESCARGAS, nombre))
++            dentro = (
++                destino == DESCARGAS_REAL
++                or destino.startswith(DESCARGAS_REAL + os.sep)
++            )
++            if not dentro:
++                self._txt(404, "no encontrado")
++                return
+             try:
+-                with open(ruta, "rb") as fh:
++                with open(destino, "rb") as fh:
+                     self._txt(200, fh.read(8192).decode("utf-8", "ignore"))
+             except Exception:
+                 self._txt(404, "no encontrado")
+         else:
++            # D2 y D3 (parte "/backup"): esos endpoints de debug/backup NO
++            # EXISTEN más. No es "ocultarlos": se borraron del código, así
++            # que caen acá como cualquier ruta inexistente.
+             self._txt(404, "404 - no existe")
+ 
+     # --- helpers de respuesta ---
+@@ -97,9 +114,6 @@
+     def _txt(self, code, body):
+         self._send(code, body.encode(), "text/plain; charset=utf-8")
+ 
+-    def _json(self, code, body):
+-        self._send(code, body.encode(), "application/json")
+-
+     def _send(self, code, body, ctype):
+         self.send_response(code)
+         self.send_header("Content-Type", ctype)
+@@ -113,5 +127,5 @@
+ if __name__ == "__main__":
+     init_db()
+     puerto = int(os.environ.get("PORT", "8080"))
+-    print(f"PhantomCorp (VULNERABLE) en 0.0.0.0:{puerto}")
++    print(f"PhantomCorp (endurecido — Grupo 03) en 0.0.0.0:{puerto}")
+     ThreadingHTTPServer(("0.0.0.0", puerto), Handler).serve_forever()
