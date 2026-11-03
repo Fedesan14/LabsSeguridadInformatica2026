@@ -1,0 +1,10 @@
+$ curl -s -o /dev/null -w 'status=%{http_code}\n' "http://127.0.0.1:18383/descargar?archivo=../../../../etc/passwd"
+status=404
+$ curl -s -o /dev/null -w 'status=%{http_code}\n' "http://127.0.0.1:18383/descargar?archivo=../../Windows/win.ini"  (archivo real en Windows)
+status=404
+$ curl -s -o /dev/null -w 'status=%{http_code}\n' "http://127.0.0.1:18383/descargar?archivo=%2e%2e%2f%2e%2e%2fWindows%2fwin.ini"  (variante %2e%2e%2f)
+status=404
+$ curl -s -o /dev/null -w 'status=%{http_code}\n' "http://127.0.0.1:18383/descargar?archivo=....//....//Windows/win.ini"  (variante ....//)
+status=404
+$ curl -s -o /dev/null -w 'status=%{http_code}\n' "http://127.0.0.1:18383/descargar?archivo=manual.txt"  (legitimo, control)
+status=200

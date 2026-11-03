@@ -1,0 +1,17 @@
+
+== Lab Extra 3 · verificación de defensas ==
+[2mObjetivo bajo prueba: entregas/labextra3/grupo03/objetivo\server.py[0m
+
+  [32m✓[0m D1 — ataque BLOQUEADO  [2m(header Server: '')[0m
+      flag: FLAG{def_banner_neutralizado}
+  [32m✓[0m D2 — ataque BLOQUEADO  [2m(GET /api/status -> 404 '404 - no existe')[0m
+      flag: FLAG{def_debug_apagado}
+  [32m✓[0m D3 — ataque BLOQUEADO  [2m(GET /backup -> 404; robots menciona /backup: False)[0m
+      flag: FLAG{def_rutas_blindadas}
+  [32m✓[0m D4 — ataque BLOQUEADO  [2m(bypass admin'--: bloqueado; OR 1=1: bloqueado)[0m
+      flag: FLAG{def_sqli_parametrizado}
+  [32m✓[0m D5 — ataque BLOQUEADO  [2m(traversal /etc/passwd -> 404 (bloqueado))[0m
+      flag: FLAG{def_traversal_bloqueado}
+
+[32m5/5 defensas correctas.[0m
+[32mObjetivo endurecido. Entregá las 5 flags y escribí el informe.[0m

@@ -1,0 +1,12 @@
+$ curl -s -o /dev/null -w 'status=%{http_code}\n' http://127.0.0.1:18383/
+status=200
+
+$ curl -s 'http://127.0.0.1:18383/login?user=admin&pass=sup3r-s3cr3t0'
+<h1>Bienvenido, admin</h1>
+
+$ curl -s 'http://127.0.0.1:18383/login?user=admin&pass=incorrecta'
+<h1>Credenciales inválidas</h1>
+
+$ curl -s 'http://127.0.0.1:18383/descargar?archivo=manual.txt'
+Manual de la intranet PhantomCorp.
+

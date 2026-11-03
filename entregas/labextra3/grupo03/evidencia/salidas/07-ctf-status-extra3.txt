@@ -1,0 +1,14 @@
+
+  ╭────────────────────────────────────────────────────────────╮
+  │                   PROGRESO · LAB extra3                   │
+  ╰────────────────────────────────────────────────────────────╯
+
+   ✓  D1     Banner neutralizado (info leak de version)
+   ✓  D2     Endpoint de debug apagado en produccion
+   ✓  D3     Rutas sensibles blindadas (backup + robots)
+   ✓  D4     Login parametrizado (SQLi bloqueado)
+   ✓  D5     Path traversal bloqueado en /descargar
+
+  ██████████████████████████████  5/5 (100%)
+
+[ OK ] ¡Lab extra3 COMPLETO! Ponete las pilas con la próxima unidad.

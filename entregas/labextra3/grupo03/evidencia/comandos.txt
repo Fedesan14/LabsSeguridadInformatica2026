@@ -1,0 +1,80 @@
+# Evidencia — comandos usados (Lab Extra 3, Grupo 03)
+
+Entorno: Windows + Git Bash, sin Docker (stdlib puro). Python usado:
+`C:\Users\rumis\AppData\Local\Programs\Python\Python312\python.exe` (3.12.10).
+
+Nota de entorno: esta máquina no tenía `C:\tmp` (la app usa rutas estilo Unix
+`/tmp/...`, que en Windows resuelven contra la unidad actual). Se creó esa
+carpeta una sola vez al principio (`mkdir -p /c/tmp`) porque sin ella el
+server ni arranca (`sqlite3.OperationalError: unable to open database file`).
+Esto es un requisito de entorno, no un fix de seguridad ni algo que toque el
+código del lab.
+
+```bash
+# 0) preparar el entorno (una sola vez)
+mkdir -p /c/tmp
+
+# 1) copiar el objetivo a la entrega (el original en labs/ NO se toca)
+mkdir -p entregas/labextra3/grupo03
+cp -r labs/labextra3-hardening/objetivo entregas/labextra3/grupo03/objetivo
+
+# 2) ver el ataque funcionar contra el ORIGINAL (referencia rota)
+python3 labs/labextra3-hardening/verificar-defensa.py \
+  --dir labs/labextra3-hardening/objetivo \
+  > entregas/labextra3/grupo03/evidencia/salidas/00-verificador-inicial-1de5-falso-positivo-d5.txt
+
+# 2b) D5 en el verificador da falso "bloqueado" contra el ORIGINAL en este
+#     entorno porque el payload exacto (/etc/passwd) no existe en Windows.
+#     Se comprobó la vulnerabilidad real con un archivo que sí existe:
+python3 labs/labextra3-hardening/objetivo/server.py &   # PORT=8080 por defecto
+curl -s "http://127.0.0.1:8080/descargar?archivo=manual.txt"            # legítimo
+curl -s "http://127.0.0.1:8080/descargar?archivo=../../Windows/win.ini" # traversal real
+# > entregas/labextra3/grupo03/evidencia/salidas/01-d5-original-vulnerable-windows.txt
+
+# 3) parchear la copia (entregas/labextra3/grupo03/objetivo/server.py):
+#    D1 banner, D2 /api/status, D3 /backup+robots, D4 parametrizar, D5 confinar por path real.
+#    (ver evidencia/salidas/08-diff-server.py.diff)
+
+# 4) re-correr el ataque contra la copia parchada hasta 5/5
+python3 labs/labextra3-hardening/verificar-defensa.py \
+  --dir entregas/labextra3/grupo03/objetivo \
+  > entregas/labextra3/grupo03/evidencia/salidas/02-verificador-final-5de5.txt
+
+# 5) regresión funcional sobre la copia parchada
+python3 entregas/labextra3/grupo03/objetivo/server.py &   # PORT=8080 por defecto
+curl -s -o /dev/null -w 'status=%{http_code}\n' http://127.0.0.1:8080/
+curl -s "http://127.0.0.1:8080/login?user=admin&pass=sup3r-s3cr3t0"
+curl -s "http://127.0.0.1:8080/login?user=admin&pass=incorrecta"
+curl -s "http://127.0.0.1:8080/descargar?archivo=manual.txt"
+# > entregas/labextra3/grupo03/evidencia/salidas/03-regresion-funcional.txt
+
+# 6) evidencia puntual por defensa (contra la copia parchada)
+curl -s -D - -o /dev/null http://127.0.0.1:8080/
+# > evidencia/salidas/04-d1-header-server.txt (sin header Server)
+curl -s -D - -o /dev/null http://127.0.0.1:8080/      # (y contra el original, para comparar)
+# > evidencia/salidas/04b-d1-header-server-original.txt (Server: PhantomServer/2.4.1-debug)
+
+curl -s "http://127.0.0.1:8080/login?user=admin%27--&pass=x"
+curl -s "http://127.0.0.1:8080/login?user=x&pass=%27%20OR%201%3D1%20--"
+# > evidencia/salidas/05-d4-sqli-bloqueado.txt (los dos bypass clásicos: 401)
+
+curl -s -o /dev/null -w 'status=%{http_code}\n' "http://127.0.0.1:8080/descargar?archivo=../../../../etc/passwd"
+curl -s -o /dev/null -w 'status=%{http_code}\n' "http://127.0.0.1:8080/descargar?archivo=../../Windows/win.ini"
+curl -s -o /dev/null -w 'status=%{http_code}\n' "http://127.0.0.1:8080/descargar?archivo=%2e%2e%2f%2e%2e%2fWindows%2fwin.ini"
+curl -s -o /dev/null -w 'status=%{http_code}\n' "http://127.0.0.1:8080/descargar?archivo=....//....//Windows/win.ini"
+curl -s -o /dev/null -w 'status=%{http_code}\n' "http://127.0.0.1:8080/descargar?archivo=manual.txt"
+# > evidencia/salidas/06-d5-variantes-bloqueadas.txt (las 4 variantes de traversal: 404; manual.txt: 200)
+
+# 7) diff real del parche contra el original
+diff -u labs/labextra3-hardening/objetivo/server.py entregas/labextra3/grupo03/objetivo/server.py \
+  > entregas/labextra3/grupo03/evidencia/salidas/08-diff-server.py.diff
+
+# 8) entregar las 5 flags y ver el progreso
+./ctf submit extra3 D1 'FLAG{def_banner_neutralizado}'
+./ctf submit extra3 D2 'FLAG{def_debug_apagado}'
+./ctf submit extra3 D3 'FLAG{def_rutas_blindadas}'
+./ctf submit extra3 D4 'FLAG{def_sqli_parametrizado}'
+./ctf submit extra3 D5 'FLAG{def_traversal_bloqueado}'
+./ctf status extra3
+# > entregas/labextra3/grupo03/evidencia/salidas/07-ctf-status-extra3.txt
+```

