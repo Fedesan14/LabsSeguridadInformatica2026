@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel del swarm PTaaS</title>
+<style>
+:root {
+  --fondo: #f4f3ef; --tarjeta: #ffffff; --borde: #dcdad2; --texto: #1f1f1d; --suave: #6b6a65;
+  --acento: #0f6e56; --acento-fondo: #e1f5ee; --acento-texto: #085041;
+  --ok: #3b6d11; --ok-fondo: #eaf3de; --mal: #a32d2d; --mal-fondo: #fcebeb;
+  --aviso: #854f0b; --aviso-fondo: #faeeda; --info: #185fa5; --info-fondo: #e6f1fb;
+  --codigo: #f1efe8;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #1c1c1a; --tarjeta: #262624; --borde: #3d3d3a; --texto: #ecebe6; --suave: #a3a29b;
+    --acento: #5dcaa5; --acento-fondo: #0b3b30; --acento-texto: #9fe1cb;
+    --ok: #97c459; --ok-fondo: #213410; --mal: #f09595; --mal-fondo: #421616;
+    --aviso: #efa027; --aviso-fondo: #3a2606; --info: #85b7eb; --info-fondo: #0c2c4c;
+    --codigo: #30302d;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fondo); color: var(--texto); font: 15px/1.5 system-ui, "Segoe UI", sans-serif; }
+header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+  padding: 16px 24px; background: var(--tarjeta); border-bottom: 1px solid var(--borde); }
+header h1 { margin: 0; font-size: 20px; font-weight: 600; }
+header p { margin: 0; color: var(--suave); font-size: 13px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { padding: 4px 10px; border-radius: 999px; font-size: 13px; background: var(--codigo); }
+.chip.target { background: var(--acento-fondo); color: var(--acento-texto); }
+.chip.corriendo { background: var(--info-fondo); color: var(--info); }
+.chip.error { background: var(--mal-fondo); color: var(--mal); }
+.chip.listo { background: var(--ok-fondo); color: var(--ok); }
+main { display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 20px; padding: 20px 24px; max-width: 1500px; margin: 0 auto; }
+@media (max-width: 960px) { main { grid-template-columns: minmax(0, 1fr); padding: 16px; } }
+.col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+section { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 12px; padding: 16px; min-width: 0; }
+h2 { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
+.ayuda { margin: 0 0 12px; color: var(--suave); font-size: 13px; }
+label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+input, select { width: 100%; padding: 8px 10px; border: 1px solid var(--borde); border-radius: 8px;
+  background: var(--fondo); color: var(--texto); font: 14px ui-monospace, Consolas, monospace; }
+.fila { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+button { padding: 8px 14px; border: 1px solid var(--borde); border-radius: 8px; background: var(--tarjeta);
+  color: var(--texto); font: inherit; font-size: 14px; cursor: pointer; }
+button:hover:not(:disabled) { border-color: var(--suave); }
+button.primario { background: var(--acento); border-color: var(--acento); color: #fff; font-weight: 600; }
+@media (prefers-color-scheme: dark) { button.primario { color: #04342c; } }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+.aviso { margin-top: 12px; padding: 10px 12px; border-radius: 8px; font-size: 14px; }
+.aviso.ok { background: var(--ok-fondo); color: var(--ok); }
+.aviso.mal { background: var(--mal-fondo); color: var(--mal); }
+.aviso.info { background: var(--info-fondo); color: var(--info); }
+.aviso.nota { background: var(--aviso-fondo); color: var(--aviso); }
+.aviso strong { display: block; margin-bottom: 2px; }
+.hash { font: 12px ui-monospace, Consolas, monospace; word-break: break-all; }
+pre { margin: 6px 0 0; padding: 8px; background: var(--codigo); border-radius: 6px; white-space: pre-wrap;
+  word-break: break-word; font: 12px ui-monospace, Consolas, monospace; max-height: 280px; overflow: auto; color: var(--texto); }
+
+.flujo { max-width: 720px; margin: 0 auto; display: block; }
+.nd rect { fill: var(--fondo); stroke: var(--borde); stroke-width: 1; transition: fill .3s, stroke .3s; }
+.nd .t1 { fill: var(--texto); font: 600 14px system-ui, sans-serif; }
+.nd .t2 { fill: var(--suave); font: 12px system-ui, sans-serif; }
+.nd.on rect { fill: var(--acento-fondo); stroke: var(--acento); }
+.nd.on .t1, .nd.on .t2 { fill: var(--acento-texto); }
+.nd.mal rect { fill: var(--mal-fondo); stroke: var(--mal); }
+.nd.mal .t1, .nd.mal .t2 { fill: var(--mal); }
+.fl { stroke: var(--borde); stroke-width: 2; fill: none; }
+.fl.on { stroke: var(--acento); stroke-dasharray: 7 5; }
+.fl.mal { stroke: var(--mal); stroke-dasharray: 7 5; }
+@media (prefers-reduced-motion: no-preference) {
+  .fl.ida { animation: mover .7s linear infinite; }
+  .fl.vuelta { animation: mover .7s linear infinite reverse; }
+}
+@keyframes mover { to { stroke-dashoffset: -12; } }
+.relato { margin: 10px auto 0; max-width: 720px; padding: 12px 14px; border-radius: 10px; background: var(--fondo); min-height: 66px; }
+.relato .que { font-size: 12px; color: var(--suave); }
+.relato p { margin: 2px 0 0; }
+.reproductor { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: center; margin-top: 12px; }
+.reproductor .pos { font-size: 13px; color: var(--suave); min-width: 120px; text-align: center; }
+
+.resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.cifra { padding: 10px 12px; border-radius: 8px; background: var(--fondo); }
+.cifra b { display: block; font-size: 22px; font-weight: 600; }
+.cifra span { font-size: 12px; color: var(--suave); }
+.cifra.hallazgo b { color: var(--ok); }
+.cifra.rech b { color: var(--mal); }
+.cuerpo { display: grid; grid-template-columns: minmax(200px, 260px) minmax(0, 1fr); gap: 14px; }
+@media (max-width: 1200px) { .cuerpo { grid-template-columns: minmax(0, 1fr); } }
+.pizarra { border: 1px solid var(--borde); border-radius: 10px; padding: 12px; align-self: start; }
+.pizarra h3, .acciones h3 { margin: 0 0 2px; font-size: 14px; font-weight: 600; }
+.pizarra .ayuda, .acciones .ayuda { margin-bottom: 8px; font-size: 12px; }
+.pz-grupo { font-size: 12px; color: var(--suave); margin: 8px 0 4px; }
+.pz-item { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; padding: 3px 0; border-bottom: 1px solid var(--borde); }
+.pz-item code { font: 12px ui-monospace, Consolas, monospace; }
+.etq { padding: 0 8px; border-radius: 999px; font-size: 12px; white-space: nowrap; }
+.etq.nada { background: var(--codigo); color: var(--suave); }
+.etq.hallazgo, .etq.ok { background: var(--ok-fondo); color: var(--ok); }
+.etq.bloqueo, .etq.error { background: var(--mal-fondo); color: var(--mal); }
+.etq.pendiente { background: var(--info-fondo); color: var(--info); }
+.vacio { color: var(--suave); font-size: 13px; padding: 8px 0; }
+
+.leyenda { font-size: 13px; margin-bottom: 10px; }
+.leyenda summary { cursor: pointer; color: var(--acento-texto); }
+@media (prefers-color-scheme: dark) { .leyenda summary { color: var(--acento); } }
+.leyenda ul { margin: 6px 0 0; padding-left: 18px; color: var(--suave); }
+ol.lista { list-style: none; margin: 0; padding: 2px 4px 2px 2px; display: flex; flex-direction: column; gap: 8px; max-height: 560px; overflow-y: auto; }
+li.accion { border: 1px solid var(--borde); border-radius: 10px; padding: 10px 12px; transition: background .3s, border-color .3s; }
+li.accion.hallazgo { background: var(--ok-fondo); border-color: var(--ok); }
+li.accion.bloqueo { background: var(--mal-fondo); border-color: var(--mal); }
+li.accion.actual { border-color: var(--info); box-shadow: 0 0 0 2px var(--info-fondo); }
+.ac-cab { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 10px; align-items: start; }
+.ac-paso { font-size: 12px; color: var(--suave); text-align: center; }
+.ac-paso b { display: block; font-size: 18px; color: var(--texto); line-height: 1.2; }
+.ac-agente { font-size: 12px; color: var(--suave); }
+.ac-agente b { font-weight: 600; color: var(--texto); }
+.ac-que { font-size: 15px; margin: 1px 0 5px; }
+.res .etq { font-size: 13px; padding: 2px 10px; display: inline-block; }
+.tecnico { margin-top: 8px; font-size: 13px; }
+.tecnico summary { cursor: pointer; color: var(--suave); font-size: 12px; }
+.tec-fila { margin-top: 8px; }
+.tec-fila .ev { display: inline-block; padding: 0 8px; border-radius: 999px; font-size: 12px; margin-right: 6px; }
+.ev.propuesta { background: var(--info-fondo); color: var(--info); }
+.ev.resultado { background: var(--ok-fondo); color: var(--ok); }
+.ev.rechazada, .ev.error { background: var(--mal-fondo); color: var(--mal); }
+.tec-fila .expl { color: var(--suave); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Swarm PTaaS</h1>
+    <p>UTN FRVM · Seguridad Informática 2026 · Grupo 03</p>
+  </div>
+  <div class="chips">
+    <span class="chip target" title="Definido en roe.py: el panel no puede cambiarlo">Target: {{OBJETIVO}}</span>
+    <span class="chip" id="estado" role="status" aria-live="polite">Inactivo</span>
+  </div>
+</header>
+
+<main>
+  <div class="col">
+    <section>
+      <h2>1 · Clave HMAC</h2>
+      <p class="ayuda">Firma la bitácora. Sin la misma clave no se puede verificar después: guardala fuera del repo. El panel no la guarda.</p>
+      <label for="clave">Clave</label>
+      <input id="clave" type="password" autocomplete="off" spellcheck="false" placeholder="Pegá tu clave o generá una">
+      <div class="fila">
+        <button id="generar">Generar</button>
+        <button id="mostrar" aria-pressed="false">Mostrar</button>
+        <button id="copiar-clave">Copiar</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>2 · Correr el swarm</h2>
+      <p class="ayuda">Recon escanea los puertos del target y Enum busca páginas ocultas. Cada acción corre en un contenedor aislado. Tarda unos 30 segundos y necesita Docker y el lab levantado.</p>
+      <label for="nombre">Archivo de bitácora (en .loot/)</label>
+      <input id="nombre" spellcheck="false">
+      <div class="fila"><button class="primario" id="correr">▶ Correr el swarm</button></div>
+      <div id="res-corrida"></div>
+    </section>
+
+    <section>
+      <h2>3 · Poner a prueba la RoE</h2>
+      <p class="ayuda">Lanza un agente "pícaro" que intenta salirse del alcance: atacar otra IP, inyectar un comando, usar una herramienta prohibida. La RoE tiene que frenar todo. No usa Docker.</p>
+      <button id="probar-roe">Lanzar el agente pícaro</button>
+      <div id="res-roe"></div>
+    </section>
+
+    <section>
+      <h2>4 · Verificar una bitácora</h2>
+      <p class="ayuda">Elegí una bitácora para verla, verificar que nadie la modificó o demostrar que una alteración se detecta.</p>
+      <label for="lista">Bitácora</label>
+      <select id="lista"></select>
+      <div class="fila">
+        <button id="verificar">Verificar cadena</button>
+        <button id="alterar">Demo de alteración</button>
+        <button id="refrescar" aria-label="Actualizar la lista de bitácoras">↻</button>
+      </div>
+      <div id="res-bitacora"></div>
+    </section>
+
+    <section>
+      <h2>Test del swarm</h2>
+      <p class="ayuda">Corre test_ptaas.py: determinismo, RoE, integridad y seguridad del panel, sin Docker.</p>
+      <button id="test">Correr el test</button>
+      <div id="res-test"></div>
+    </section>
+  </div>
+
+  <div class="col">
+    <section>
+      <h2>Cómo viaja cada acción</h2>
+      <p class="ayuda">Un agente nunca ataca directo: propone una acción, el orquestador la controla contra la RoE, la anota y recién ahí la ejecuta en un contenedor aislado contra el target.</p>
+      <svg class="flujo" viewBox="0 0 680 100" role="img" aria-labelledby="flujo-t flujo-d">
+        <title id="flujo-t">Recorrido de una acción</title>
+        <desc id="flujo-d">Agentes, orquestador con la RoE, sandbox y target, de izquierda a derecha. Se ilumina la etapa en la que está la acción actual.</desc>
+        <line id="f1" class="fl" x1="152" y1="50" x2="188" y2="50"/>
+        <line id="f2" class="fl" x1="322" y1="50" x2="358" y2="50"/>
+        <line id="f3" class="fl" x1="492" y1="50" x2="528" y2="50"/>
+        <g id="n-ag" class="nd"><rect x="20" y="20" width="130" height="60" rx="8"/><text class="t1" x="85" y="44" text-anchor="middle" dominant-baseline="central">Agentes</text><text class="t2" x="85" y="63" text-anchor="middle" dominant-baseline="central" id="n-ag-sub">proponen</text></g>
+        <g id="n-orq" class="nd"><rect x="190" y="20" width="130" height="60" rx="8"/><text class="t1" x="255" y="44" text-anchor="middle" dominant-baseline="central">Orquestador</text><text class="t2" x="255" y="63" text-anchor="middle" dominant-baseline="central">RoE + bitácora</text></g>
+        <g id="n-sb" class="nd"><rect x="360" y="20" width="130" height="60" rx="8"/><text class="t1" x="425" y="44" text-anchor="middle" dominant-baseline="central">Sandbox</text><text class="t2" x="425" y="63" text-anchor="middle" dominant-baseline="central">Docker aislado</text></g>
+        <g id="n-tg" class="nd"><rect x="530" y="20" width="130" height="60" rx="8"/><text class="t1" x="595" y="44" text-anchor="middle" dominant-baseline="central">{{OBJETIVO}}</text><text class="t2" x="595" y="63" text-anchor="middle" dominant-baseline="central">el target</text></g>
+      </svg>
+      <div class="relato" aria-live="polite"><div class="que" id="relato-que">Esperando</div><p id="relato">Elegí una bitácora y tocá Reproducir para verla paso a paso, o corré el swarm para verlo en vivo.</p></div>
+      <div class="reproductor">
+        <button id="rep-inicio" aria-label="Volver al principio">⏮</button>
+        <button id="rep-ant" aria-label="Evento anterior">◀</button>
+        <button class="primario" id="rep-play">▶ Reproducir</button>
+        <button id="rep-sig" aria-label="Evento siguiente">▶|</button>
+        <button id="rep-todo">Ver todo</button>
+        <span class="pos" id="rep-pos"></span>
+      </div>
+    </section>
+
+    <section>
+      <h2 id="titulo-bitacora">Lo que hizo el swarm</h2>
+      <div class="resumen">
+        <div class="cifra"><b id="n-acciones">0</b><span>acciones ejecutadas</span></div>
+        <div class="cifra hallazgo"><b id="n-hallazgos">0</b><span>hallazgos</span></div>
+        <div class="cifra rech"><b id="n-rechazadas">0</b><span>bloqueadas por la RoE</span></div>
+        <div class="cifra"><b id="n-fallos">0</b><span>con error</span></div>
+      </div>
+      <div class="cuerpo">
+        <div class="pizarra">
+          <h3>Pizarra</h3>
+          <p class="ayuda">Lo que los agentes van sabiendo del target. Cada agente lee de acá para decidir su próxima acción.</p>
+          <div id="pizarra"><div class="vacio">Todavía no saben nada.</div></div>
+        </div>
+        <div class="acciones">
+          <h3>Acciones, en orden</h3>
+          <details class="leyenda">
+            <summary>¿Cómo leer esto?</summary>
+            <ul>
+              <li>Cada tarjeta es una acción de un agente: qué intentó y qué pasó.</li>
+              <li>En la bitácora, cada acción queda como dos <em>eventos</em>: <b>propuesta</b> (lo que el agente pidió hacer, antes de ejecutarlo) y <b>resultado</b> (lo que respondió el target). Si la RoE la bloquea, queda un solo evento: <b>rechazada</b>.</li>
+              <li>El <em>detalle</em> es el dato crudo de cada evento: el comando exacto o la respuesta tal cual llegó. Está en "Ver lo técnico".</li>
+              <li><b>rc</b> es el código de salida del comando: 0 quiere decir que el comando terminó bien, no que encontró algo.</li>
+            </ul>
+          </details>
+          <ol class="lista" id="lista-acciones"><li class="vacio">Elegí una bitácora o corré el swarm.</li></ol>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script nonce="{{NONCE}}">
+const TOKEN = "{{TOKEN}}";
+const OBJETIVO = "{{OBJETIVO}}";
+const $ = id => document.getElementById(id);
+const AGENTES = {
+  recon: ["Recon", "explora qué puertos hay"],
+  enum: ["Enum", "busca páginas ocultas"],
+  picaro: ["Pícaro", "agente de prueba de la RoE"],
+};
+let eventos = [], vista = null, sondeo = null, rep = null, repTimer = null, enVivo = false;
+
+async function api(ruta, cuerpo) {
+  const r = await fetch(ruta, {
+    method: cuerpo === undefined ? "GET" : "POST",
+    headers: { "X-Token": TOKEN, "Content-Type": "application/json" },
+    body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo),
+  });
+  const datos = await r.json();
+  if (!r.ok) throw new Error(datos.error || `error ${r.status}`);
+  return datos;
+}
+
+function el(tag, clase, texto) {
+  const n = document.createElement(tag);
+  if (clase) n.className = clase;
+  if (texto !== undefined) n.textContent = texto;
+  return n;
+}
+
+function aviso(destino, tipo, titulo, texto) {
+  const caja = el("div", `aviso ${tipo}`);
+  caja.append(el("strong", "", titulo));
+  if (texto) caja.append(el("div", /^[0-9a-f]{64}$/.test(texto) ? "hash" : "", texto));
+  $(destino).replaceChildren(caja);
+  return caja;
+}
+
+function clave() {
+  const c = $("clave").value.trim();
+  if (!c) { $("clave").focus(); throw new Error("Primero cargá o generá la clave HMAC (tarjeta 1)."); }
+  return c;
+}
+
+function marcaDeTiempo() {
+  const d = new Date(), p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+}
+
+function servicio(s) {
+  const seguro = !s.endsWith("?"), base = s.replace(/\?$/, "");
+  const nombres = { http: "web", https: "web segura", ssh: "acceso remoto SSH", ftp: "FTP", mysql: "base de datos MySQL" };
+  return (nombres[base] || base) + (seguro ? "" : ", probable");
+}
+
+function agruparAcciones(evs) {
+  const acciones = [];
+  evs.forEach((e, i) => {
+    if (e.evento === "propuesta" || e.evento === "rechazada") {
+      acciones.push({ paso: e.paso, agente: e.agente, [e.evento === "propuesta" ? "prop" : "rech"]: e, desde: i, hasta: i });
+      return;
+    }
+    const a = acciones.findLast(x => x.paso === e.paso && x.agente === e.agente);
+    if (a) { a[e.evento === "error" ? "err" : "res"] = e; a.hasta = i; }
+  });
+  return acciones;
+}
+
+function rutaDe(argv) {
+  try { return new URL(argv[argv.length - 1]).pathname; } catch { return null; }
+}
+
+function queHizo(a, infinitivo) {
+  const quiso = infinitivo ? "" : "Quiso ";
+  if (a.rech) {
+    const x = a.rech.datos.accion || {};
+    if (x.objetivo !== OBJETIVO) return `${quiso}atacar ${x.objetivo}`;
+    if (!["curl", "curl_cuerpo", "nmap"].includes(x.herramienta)) return `${quiso}usar ${x.herramienta} contra ${x.objetivo}`;
+    return `${quiso}probar ${x.objetivo}${x.param || ""} en el puerto ${x.puerto}`;
+  }
+  const argv = (a.prop && a.prop.datos.argv) || [];
+  if (argv[0] === "curl" && !argv.includes("-w")) return infinitivo ? "leer robots.txt" : "Leyó robots.txt";
+  if (argv[0] === "nmap") return infinitivo ? `escanear los puertos de ${argv[argv.length - 1]}` : `Escaneó los puertos de ${argv[argv.length - 1]}`;
+  if (argv[0] === "curl") return infinitivo ? `probar si existe la página ${rutaDe(argv) || "?"}` : `Probó si existe la página ${rutaDe(argv) || "?"}`;
+  return argv.join(" ");
+}
+
+const MOTIVOS = [
+  [/^fuera de alcance/, "Bloqueada: ese host está fuera del alcance autorizado"],
+  [/^herramienta no permitida/, "Bloqueada: esa herramienta no está permitida"],
+  [/^parámetro inválido/, "Bloqueada: intentó colar un comando en la ruta"],
+  [/^puerto inválido/, "Bloqueada: el puerto no es válido"],
+];
+
+function puertosDe(salida) {
+  return [...String(salida).matchAll(/^(\d+)\/tcp\s+open\s+(\S+)/gm)].map(m => [m[1], m[2]]);
+}
+
+function queResulto(a) {
+  if (a.rech) {
+    const m = a.rech.datos.motivo || "";
+    const hit = MOTIVOS.find(([re]) => re.test(m));
+    return { texto: hit ? hit[1] : `Bloqueada: ${m}`, tipo: "bloqueo" };
+  }
+  if (a.err) return { texto: `Error: ${a.err.datos.motivo}`, tipo: "error" };
+  if (!a.res) return { texto: "Ejecutándose…", tipo: "pendiente" };
+  const { rc, salida } = a.res.datos, argv = a.prop.datos.argv || [];
+  if (rc === -1) return { texto: "Se cortó: tardó más de 60 segundos", tipo: "error" };
+  if (argv[0] === "curl" && !argv.includes("-w")) {
+    if (rc !== 0) return { texto: "No se pudo leer robots.txt", tipo: "error" };
+    const rutas = [...String(salida).matchAll(/^Disallow:\s*(\S+)/gim)].map(m => m[1]);
+    if (!rutas.length) return { texto: "No esconde rutas", tipo: "nada" };
+    return { texto: `Esconde ${rutas.length === 1 ? "1 ruta" : rutas.length + " rutas"}: ${rutas.join(", ")}`, tipo: "hallazgo" };
+  }
+  if (argv[0] === "nmap") {
+    if (rc !== 0) return { texto: "nmap falló", tipo: "error" };
+    const ps = puertosDe(salida);
+    if (!ps.length) return { texto: "No encontró puertos abiertos", tipo: "nada" };
+    return { texto: `Encontró ${ps.length === 1 ? "1 puerto abierto" : ps.length + " puertos abiertos"}: ` + ps.map(([p, s]) => `${p} (${servicio(s)})`).join(", "), tipo: "ok" };
+  }
+  if (argv[0] === "curl") {
+    const c = String(salida).trim();
+    if (c === "404") return { texto: "No existe (HTTP 404)", tipo: "nada" };
+    if (c === "200") return { texto: "¡Existe! (HTTP 200)", tipo: "hallazgo" };
+    if (c === "401") return { texto: "Existe y pide login (HTTP 401)", tipo: "hallazgo" };
+    if (c === "403") return { texto: "Existe pero está prohibida (HTTP 403)", tipo: "hallazgo" };
+    if (/^3\d\d$/.test(c)) return { texto: `Redirige a otra página (HTTP ${c})`, tipo: "hallazgo" };
+    if (/^5\d\d$/.test(c)) return { texto: `El servidor falló (HTTP ${c})`, tipo: "hallazgo" };
+    if (c === "000" || rc !== 0) return { texto: "No se pudo conectar con el target", tipo: "error" };
+    return { texto: `Respondió HTTP ${c}`, tipo: "nada" };
+  }
+  return { texto: rc === 0 ? "Terminó bien" : `Falló (rc=${rc})`, tipo: rc === 0 ? "ok" : "error" };
+}
+
+function filaTecnica(e, explicacion, contenido) {
+  const f = el("div", "tec-fila");
+  f.append(el("span", `ev ${e.evento}`, e.evento), el("span", "expl", explicacion), el("pre", "", contenido));
+  return f;
+}
+
+function tarjeta(a, actual) {
+  const r = queResulto(a);
+  const li = el("li", `accion ${r.tipo === "hallazgo" ? "hallazgo" : r.tipo === "bloqueo" ? "bloqueo" : ""} ${actual ? "actual" : ""}`);
+  const [nom, rol] = AGENTES[a.agente] || [a.agente, "agente"];
+  const cab = el("div", "ac-cab");
+  const paso = el("div", "ac-paso", "Paso"); paso.append(el("b", "", String(a.paso)));
+  const cuerpo = el("div");
+  const ag = el("div", "ac-agente"); ag.append(el("b", "", nom), ` · ${rol}`);
+  const res = el("div", "res"); res.append(el("span", `etq ${r.tipo}`, "→ " + r.texto));
+  cuerpo.append(ag, el("div", "ac-que", queHizo(a)), res);
+  cab.append(paso, cuerpo);
+  const tec = el("details", "tecnico");
+  tec.append(el("summary", "", "Ver lo técnico (lo que quedó en la bitácora)"));
+  if (a.prop) tec.append(filaTecnica(a.prop, "lo que el agente pidió ejecutar:", (a.prop.datos.argv || []).join(" ")));
+  if (a.res) tec.append(filaTecnica(a.res, `lo que respondió el target (rc=${a.res.datos.rc}):`, String(a.res.datos.salida ?? "")));
+  if (a.rech) tec.append(filaTecnica(a.rech, "la RoE la frenó antes de ejecutarla. Motivo:", a.rech.datos.motivo));
+  if (a.err) tec.append(filaTecnica(a.err, "la corrida se cortó:", a.err.datos.motivo));
+  li.append(cab, tec);
+  return li;
+}
+
+function pizarra(acciones) {
+  const caja = $("pizarra");
+  const puertos = [], rutas = [], bloqueos = acciones.filter(a => a.rech).length;
+  acciones.forEach(a => {
+    if (!a.res || !a.prop) return;
+    const argv = a.prop.datos.argv || [];
+    if (argv[0] === "nmap") puertos.push(...puertosDe(a.res.datos.salida));
+    if (argv[0] === "curl" && argv.includes("-w")) rutas.push([rutaDe(argv), queResulto(a)]);
+  });
+  const nodos = [];
+  if (puertos.length) {
+    nodos.push(el("div", "pz-grupo", "Puertos abiertos"));
+    puertos.forEach(([p, s]) => { const f = el("div", "pz-item"); f.append(el("code", "", `${p}/tcp`), el("span", "etq ok", servicio(s))); nodos.push(f); });
+  }
+  if (rutas.length) {
+    nodos.push(el("div", "pz-grupo", "Páginas probadas"));
+    rutas.forEach(([ruta, r]) => {
+      const f = el("div", "pz-item");
+      const corto = r.tipo === "hallazgo" ? "existe ★" : r.tipo === "nada" ? "no existe" : "error";
+      f.append(el("code", "", ruta), el("span", `etq ${r.tipo}`, corto));
+      nodos.push(f);
+    });
+  }
+  if (bloqueos) {
+    nodos.push(el("div", "pz-grupo", "RoE"));
+    const f = el("div", "pz-item"); f.append(el("span", "", "Acciones bloqueadas"), el("span", "etq bloqueo", String(bloqueos))); nodos.push(f);
+  }
+  caja.replaceChildren(...(nodos.length ? nodos : [el("div", "vacio", "Todavía no saben nada.")]));
+}
+
+function diagrama(e) {
+  const nodos = { ag: "", orq: "", sb: "", tg: "" }, flujos = { f1: "", f2: "", f3: "" };
+  let que = "Esperando", texto = "Elegí una bitácora y tocá Reproducir para verla paso a paso, o corré el swarm para verlo en vivo.";
+  if (e) {
+    const acciones = agruparAcciones(eventos.slice(0, (rep ?? eventos.length - 1) + 1));
+    const a = acciones[acciones.length - 1];
+    const [nom] = AGENTES[e.agente] || [e.agente];
+    if (e.evento === "propuesta") {
+      Object.assign(nodos, { ag: "on", orq: "on", sb: "on", tg: "on" }); Object.assign(flujos, { f1: "on ida", f2: "on ida", f3: "on ida" });
+      que = `Paso ${e.paso} · ${nom} propone`;
+      texto = `${nom} quiere ${queHizo(a, true)}. La RoE lo aprueba, el orquestador lo anota en la bitácora como "propuesta" y lo ejecuta en un contenedor aislado.`;
+    } else if (e.evento === "resultado") {
+      Object.assign(nodos, { ag: "on", orq: "on", sb: "on", tg: "on" }); Object.assign(flujos, { f1: "on vuelta", f2: "on vuelta", f3: "on vuelta" });
+      const r = queResulto(a);
+      que = `Paso ${e.paso} · respuesta del target`;
+      texto = `Respuesta: ${r.texto}. Se anota como "resultado" y ${nom} lo suma a la pizarra.` + (r.tipo === "hallazgo" ? " Es un hallazgo: algo que existe y no está a la vista." : "");
+    } else if (e.evento === "rechazada") {
+      Object.assign(nodos, { ag: "on", orq: "mal" }); flujos.f1 = "mal ida";
+      que = `Paso ${e.paso} · la RoE bloquea a ${nom}`;
+      texto = `${nom} quiso ${queHizo(a, true)}. ${queResulto(a).texto}. Queda anotada como "rechazada" y nunca llega al sandbox ni al target.`;
+    } else if (e.evento === "error") {
+      Object.assign(nodos, { orq: "mal" });
+      que = "Error"; texto = `La corrida se cortó: ${e.datos.motivo}`;
+    }
+  }
+  for (const [k, v] of Object.entries(nodos)) $(`n-${k}`).setAttribute("class", `nd ${v}`);
+  for (const [k, v] of Object.entries(flujos)) $(k).setAttribute("class", `fl ${v}`);
+  $("relato-que").textContent = que; $("relato").textContent = texto;
+}
+
+function pintar() {
+  const hasta = rep ?? eventos.length - 1;
+  const visibles = eventos.slice(0, hasta + 1);
+  const acciones = agruparAcciones(visibles);
+  const enFoco = rep !== null || enVivo;
+  const lista = acciones.map((a, i) => tarjeta(a, enFoco && i === acciones.length - 1));
+  $("lista-acciones").replaceChildren(...(lista.length ? lista : [el("li", "vacio", eventos.length ? "Tocá ▶|  para ver el primer evento." : "La bitácora todavía está vacía.")]));
+  pizarra(acciones);
+  diagrama(enFoco && visibles.length ? visibles[visibles.length - 1] : null);
+  $("n-acciones").textContent = acciones.filter(a => a.prop).length;
+  $("n-hallazgos").textContent = acciones.filter(a => queResulto(a).tipo === "hallazgo").length;
+  $("n-rechazadas").textContent = acciones.filter(a => a.rech).length;
+  $("n-fallos").textContent = acciones.filter(a => queResulto(a).tipo === "error").length;
+  const n = eventos.length;
+  $("rep-pos").textContent = rep === null ? (n ? `${n} evento${n === 1 ? "" : "s"} en la bitácora` : "") : `evento ${rep + 1} de ${n}`;
+  const sinDatos = !n || enVivo;
+  ["rep-inicio", "rep-ant", "rep-play", "rep-sig", "rep-todo"].forEach(id => $(id).disabled = sinDatos);
+  const caja = $("lista-acciones");
+  if (enFoco) caja.scrollTop = caja.scrollHeight;
+}
+
+function pararReproduccion() { clearInterval(repTimer); repTimer = null; $("rep-play").textContent = "▶ Reproducir"; }
+
+async function ver(nombre) {
+  if (!nombre) return;
+  if (nombre !== vista) { pararReproduccion(); rep = null; }
+  vista = nombre;
+  $("titulo-bitacora").textContent = `Lo que hizo el swarm · ${nombre}`;
+  try { eventos = await api(`/api/bitacora?nombre=${encodeURIComponent(nombre)}`); pintar(); }
+  catch (err) { aviso("res-bitacora", "mal", "No se pudo leer la bitácora", err.message); }
+}
+
+async function listar(seleccionar) {
+  const lista = await api("/api/bitacoras");
+  const opciones = lista.map(b => { const o = el("option", "", `${b.nombre}  (${Math.ceil(b.bytes / 1024)} KB)`); o.value = b.nombre; return o; });
+  if (!opciones.length) { const o = el("option", "", "No hay bitácoras en .loot/ todavía"); o.value = ""; opciones.push(o); }
+  $("lista").replaceChildren(...opciones);
+  const elegida = seleccionar || vista || (lista[0] && lista[0].nombre);
+  if (elegida) { $("lista").value = elegida; await ver(elegida); }
+}
+
+function chipEstado(texto, clase) { const c = $("estado"); c.textContent = texto; c.className = `chip ${clase || ""}`; }
+
+function mostrarHallazgos(est) {
+  const caja = aviso("res-corrida", "ok", "Corrida terminada");
+  const h = est.hallazgos;
+  const puertos = Object.entries(h.puertos).map(([p, s]) => `${p} (${servicio(s)})`);
+  caja.append(el("div", "", `Puertos abiertos: ${puertos.length ? puertos.join(", ") : "ninguno"}`));
+  caja.append(el("div", "", h.rutas.length ? "Páginas encontradas (candidatas a R1): " + h.rutas.map(r => `${r.ruta} (HTTP ${r.codigo})`).join(", ") : "Páginas encontradas: ninguna"));
+  caja.append(el("div", "", "Cabeza de la bitácora (anotala en el informe):"), el("div", "hash", est.cabeza));
+}
+
+async function seguir() {
+  const est = await api("/api/estado");
+  if (est.corriendo) {
+    enVivo = true; rep = null;
+    await ver(est.archivo);
+    chipEstado(`Corriendo · ${$("n-acciones").textContent} acciones`, "corriendo");
+    $("correr").disabled = true;
+    if (!sondeo) sondeo = setInterval(() => seguir().catch(() => {}), 1000);
+    return;
+  }
+  if (sondeo) { clearInterval(sondeo); sondeo = null; }
+  if (enVivo) { enVivo = false; await listar(vista); }
+  $("correr").disabled = false;
+  if (est.error) { chipEstado("Error", "error"); aviso("res-corrida", "mal", "La corrida falló", est.error); }
+  else if (est.hallazgos) { chipEstado("Corrida terminada", "listo"); mostrarHallazgos(est); }
+  else chipEstado("Inactivo");
+}
+
+$("generar").onclick = () => {
+  const b = new Uint8Array(32); crypto.getRandomValues(b);
+  $("clave").value = [...b].map(x => x.toString(16).padStart(2, "0")).join("");
+  aviso("res-corrida", "nota", "Clave nueva generada", "Copiala y guardala fuera del repo antes de correr el swarm.");
+};
+$("mostrar").onclick = () => {
+  const visible = $("clave").type === "password";
+  $("clave").type = visible ? "text" : "password";
+  $("mostrar").textContent = visible ? "Ocultar" : "Mostrar";
+  $("mostrar").setAttribute("aria-pressed", String(visible));
+};
+$("copiar-clave").onclick = async () => {
+  try { await navigator.clipboard.writeText(clave()); $("copiar-clave").textContent = "Copiada ✓"; setTimeout(() => $("copiar-clave").textContent = "Copiar", 1500); }
+  catch (err) { aviso("res-corrida", "mal", "No se pudo copiar", err.message); }
+};
+
+$("correr").onclick = async () => {
+  try {
+    const r = await api("/api/correr", { nombre: $("nombre").value.trim(), clave: clave() });
+    aviso("res-corrida", "info", "Corriendo…", `Mirá el diagrama y las acciones a la derecha: se actualizan en vivo. Bitácora: .loot/${r.archivo}`);
+    await listar(r.archivo);
+    $("nombre").value = `bitacora-${marcaDeTiempo()}.jsonl`;
+    await seguir();
+  } catch (err) { aviso("res-corrida", "mal", "No se pudo correr el swarm", err.message); }
+};
+
+$("probar-roe").onclick = async () => {
+  try {
+    const r = await api("/api/probar-roe", { nombre: `prueba-roe-${marcaDeTiempo()}.jsonl`, clave: clave() });
+    aviso("res-roe", "ok", "✓ La RoE bloqueó todo", `El agente pícaro propuso 4 acciones prohibidas y ninguna llegó a ejecutarse. Bitácora: .loot/${r.archivo}. Tocá Reproducir para verlo paso a paso.`);
+    await listar(r.archivo);
+  } catch (err) { aviso("res-roe", "mal", "La prueba de la RoE falló", err.message); }
+};
+
+$("lista").onchange = () => { $("res-bitacora").replaceChildren(); ver($("lista").value); };
+$("refrescar").onclick = () => listar().catch(err => aviso("res-bitacora", "mal", "No se pudo listar", err.message));
+
+$("verificar").onclick = async () => {
+  try {
+    const r = await api("/api/verificar", { nombre: $("lista").value, clave: clave() });
+    if (r.integra) aviso("res-bitacora", "ok", "✓ Nadie modificó esta bitácora · cabeza:", r.cabeza);
+    else aviso("res-bitacora", "mal", "✗ La cadena no verifica", `${r.mensaje}. La bitácora fue modificada, o la clave no es la que se usó para crearla.`);
+  } catch (err) { aviso("res-bitacora", "mal", "No se pudo verificar", err.message); }
+};
+
+$("alterar").onclick = async () => {
+  try {
+    const r = await api("/api/alterar", { nombre: $("lista").value, clave: clave() });
+    const caja = aviso("res-bitacora", r.detectada ? "ok" : "mal",
+      r.detectada ? "✓ La alteración se detectó" : "✗ La alteración NO se detectó");
+    caja.append(
+      el("div", "", `En una copia se cambió la línea ${r.linea}: la respuesta ${JSON.stringify(String(r.antes).slice(0, 40))} pasó a ${JSON.stringify(r.despues)}, como si alguien inventara un hallazgo.`),
+      el("div", "", r.detectada ? `Al verificar la copia: ${r.mensaje}.` : ""),
+      el("div", "", "La bitácora original no se modificó."));
+  } catch (err) { aviso("res-bitacora", "mal", "No se pudo hacer la demo", err.message); }
+};
+
+$("test").onclick = async () => {
+  $("test").disabled = true;
+  aviso("res-test", "info", "Corriendo el test…");
+  try {
+    const r = await api("/api/test", {});
+    const caja = aviso("res-test", r.paso ? "ok" : "mal", r.paso ? "✓ El test pasó" : "✗ El test falló");
+    caja.append(el("pre", "", r.salida));
+  } catch (err) { aviso("res-test", "mal", "No se pudo correr el test", err.message); }
+  $("test").disabled = false;
+};
+
+function irA(i) { rep = Math.max(0, Math.min(eventos.length - 1, i)); pintar(); }
+$("rep-inicio").onclick = () => { pararReproduccion(); irA(0); };
+$("rep-ant").onclick = () => { pararReproduccion(); irA((rep ?? eventos.length) - 1); };
+$("rep-sig").onclick = () => { pararReproduccion(); irA(rep === null ? 0 : rep + 1); };
+$("rep-todo").onclick = () => { pararReproduccion(); rep = null; pintar(); };
+$("rep-play").onclick = () => {
+  if (repTimer) return pararReproduccion();
+  if (rep === null || rep >= eventos.length - 1) irA(0); else irA(rep);
+  $("rep-play").textContent = "⏸ Pausa";
+  repTimer = setInterval(() => { if (rep < eventos.length - 1) irA(rep + 1); else pararReproduccion(); }, 1800);
+};
+
+$("nombre").value = `bitacora-${marcaDeTiempo()}.jsonl`;
+listar().then(seguir).catch(err => aviso("res-bitacora", "mal", "No se pudo conectar con el panel", err.message));
+</script>
+</body>
+</html>
