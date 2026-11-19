@@ -1,10 +1,3 @@
-# Entregable — Lab Extra SSRF
-
-> Copiá este archivo a `entregas/labextra/grupoXX/informe.md` y completalo.
-> Reemplazá `XX` por tu número de grupo.
-
-**Grupo:** XX · **Integrantes:** (apellido, nombre — usuario de GitHub)
-
 **Declaración de uso de IA:**
 
 - **Herramienta:** Claude Code (asistente de IA de línea de comandos, modelo
