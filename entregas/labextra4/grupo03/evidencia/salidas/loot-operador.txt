@@ -1,0 +1,5 @@
+Notas de operador — CONFIDENCIAL
+==========================
+Recuperaste esto porque la contraseña era débil.
+Evidencia: FLAG{crack_diccionario_md5}
+

@@ -1,0 +1,15 @@
+Técnica: diccionario + reglas; candidatos únicos por cuenta: 679
+Atacando operador (md5)...
+operador: hallada | intentos=92 | tiempo=0.000207s | 444444.43 intentos/s
+Atacando analista (sha256)...
+analista: hallada | intentos=134 | tiempo=0.000243s | 551894.59 intentos/s
+Atacando admin (sha256)...
+admin: hallada | intentos=67 | tiempo=0.000118s | 569244.01 intentos/s
+Atacando root (pbkdf2)...
+root: sin coincidencia en los candidatos probados | intentos=679 | tiempo=79.725718s | 8.52 intentos/s
+  ✓ operador: riverplate
+  ✓ analista: matecocido
+  ✓ admin: phantom2026
+  ✗ root: sin coincidencia en los candidatos probados
+
+3/4 contraseñas recuperadas

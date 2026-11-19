@@ -1,0 +1,2 @@
+[4684:11492:1119/202141.520:ERROR:chrome\installer\util\google_update_settings_win.cc:270] Failed opening key Software\Google\Update\ClientStateMedium\{8A69D345-D564-463c-AFF1-A69D9E530F96} to set usagestats; result: 5
+17079 bytes written to file D:\Repositorios\LabsSeguridadInformatica2026\entregas\labextra4\grupo03\evidencia\ctf-status.png

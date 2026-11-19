@@ -1,0 +1,62 @@
+{
+  "fecha_buenos_aires": "2026-11-19T20:17:54.019879-03:00",
+  "entorno": {
+    "python": "3.13.15",
+    "sistema": "Windows-11-10.0.26200-SP0",
+    "procesador": "AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD",
+    "cpus_logicas": 12,
+    "openssl": "OpenSSL 3.0.21 9 Jun 2026"
+  },
+  "diccionario": "labs\\labextra4-cracking\\caso\\diccionario.txt",
+  "candidatos_diccionario": 49,
+  "candidatos_con_reglas": 679,
+  "metodo": "Un hilo; perf_counter; mediana de 3 tandas de hash_de; sin I/O en el bucle. No es un benchmark GPU.",
+  "mediciones": [
+    {
+      "algoritmo": "md5",
+      "iteraciones_pbkdf2": null,
+      "intentos_por_repeticion": 100000,
+      "segundos_repeticiones": [
+        0.16321759996935725,
+        0.1614019999979064,
+        0.16266839997842908
+      ],
+      "mediana_segundos": 0.16266839997842908,
+      "intentos_por_segundo": 614747.5478535516,
+      "segundos_diccionario": 7.970751598943025e-05,
+      "segundos_con_reglas": 0.0011045184358535335
+    },
+    {
+      "algoritmo": "sha256",
+      "iteraciones_pbkdf2": null,
+      "intentos_por_repeticion": 100000,
+      "segundos_repeticiones": [
+        0.15929549996508285,
+        0.16047469998011366,
+        0.1626061000279151
+      ],
+      "mediana_segundos": 0.16047469998011366,
+      "intentos_por_segundo": 623151.1883953807,
+      "segundos_diccionario": 7.863260299025568e-05,
+      "segundos_con_reglas": 0.0010896232128649716
+    },
+    {
+      "algoritmo": "pbkdf2",
+      "iteraciones_pbkdf2": 200000,
+      "intentos_por_repeticion": 20,
+      "segundos_repeticiones": [
+        2.3399908000137657,
+        2.3711478000041097,
+        2.3062307999935
+      ],
+      "mediana_segundos": 2.3399908000137657,
+      "intentos_por_segundo": 8.54704215071373,
+      "segundos_diccionario": 5.732977460033726,
+      "segundos_con_reglas": 79.44268766046734
+    }
+  ],
+  "razon_md5_sobre_pbkdf2": 71925.18031541664,
+  "ordenes_magnitud_md5_pbkdf2": 4.8568809593338935,
+  "segundos_1000_unidades_equivalentes_cpu_ideal": 0.005732977460033726,
+  "advertencia": "Sin medir PBKDF2-200k en una GPU no se puede asignar una tasa real a 1000 GPUs. Además, un diccionario de 49 candidatos no ocupa 1000 GPUs en paralelo."
+}

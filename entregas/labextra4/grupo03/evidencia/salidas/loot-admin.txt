@@ -1,0 +1,5 @@
+Notas de admin — CONFIDENCIAL
+==========================
+Recuperaste esto porque la contraseña era débil.
+Evidencia: FLAG{crack_reglas_mangling}
+

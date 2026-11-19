@@ -1,0 +1,5 @@
+Notas de analista — CONFIDENCIAL
+==========================
+Recuperaste esto porque la contraseña era débil.
+Evidencia: FLAG{crack_sha256_diccionario}
+

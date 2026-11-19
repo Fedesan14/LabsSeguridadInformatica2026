@@ -1,0 +1,15 @@
+test_caso_real_diccionario_reglas_y_loot (__main__.PruebasCracker.test_caso_real_diccionario_reglas_y_loot) ... ok
+test_diccionario_utf8_duplicados_y_espacios (__main__.PruebasCracker.test_diccionario_utf8_duplicados_y_espacios) ... ok
+test_diccionario_vacio_y_algoritmo_no_soportado (__main__.PruebasCracker.test_diccionario_vacio_y_algoritmo_no_soportado) ... ok
+test_md5_y_sha256_vectores_publicados (__main__.PruebasCracker.test_md5_y_sha256_vectores_publicados) ... ok
+test_pbkdf2_se_prueba_y_no_se_omite (__main__.PruebasCracker.test_pbkdf2_se_prueba_y_no_se_omite) ... ok
+test_pbkdf2_vector_rfc7914_seccion11 (__main__.PruebasCracker.test_pbkdf2_vector_rfc7914_seccion11) ... ok
+test_reglas_y_deduplicacion (__main__.PruebasCracker.test_reglas_y_deduplicacion) ... ok
+test_sombra_bom_comentarios_y_hex_mayuscula (__main__.PruebasCracker.test_sombra_bom_comentarios_y_hex_mayuscula) ... ok
+test_sombra_rechaza_entradas_invalidas_con_numero_linea (__main__.PruebasCracker.test_sombra_rechaza_entradas_invalidas_con_numero_linea) ... ok
+test_sombra_rechaza_usuario_duplicado (__main__.PruebasCracker.test_sombra_rechaza_usuario_duplicado) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.508s
+
+OK

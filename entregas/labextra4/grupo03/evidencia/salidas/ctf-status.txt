@@ -1,0 +1,12 @@
+
+  ╭────────────────────────────────────────────────────────────╮
+  │                   PROGRESO · LAB extra4                    │
+  ╰────────────────────────────────────────────────────────────╯
+
+   ✓  R1     MD5 + diccionario (caida instantanea)
+   ✓  R2     SHA-256 + diccionario
+   ✓  R3     SHA-256 + regla de mangling (no esta literal en el diccionario)
+
+  ██████████████████████████████  3/3 (100%)
+
+[ OK ] ¡Lab extra4 COMPLETO! Ponete las pilas con la próxima unidad.

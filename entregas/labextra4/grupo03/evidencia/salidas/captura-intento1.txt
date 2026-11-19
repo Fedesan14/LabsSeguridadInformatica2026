@@ -1,0 +1,12 @@
+[13616:14040:1119/202104.582:ERROR:chrome\installer\util\google_update_settings_win.cc:270] Failed opening key Software\Google\Update\ClientStateMedium\{8A69D345-D564-463c-AFF1-A69D9E530F96} to set usagestats; result: 5
+[13616:23876:1119/202104.737:ERROR:content\browser\gpu\gpu_process_host.cc:1042] GPU process exited unexpectedly: exit_code=-1073741790
+[13616:14040:1119/202104.739:ERROR:components\viz\host\persistent_cache_sandboxed_file_factory.cc:153] Failed to open persistent cache files in directory "C:\Users\feder\AppData\Local\Temp\labextra4-browser-cli8v8pp\GPUPersistentCache\DawnGraphiteCache\23IMHJGI2WIIJ3PDLCHAHUJAGHTLTEBB", error: 0: El proceso no tiene acceso al archivo porque está siendo utilizado por otro proceso. (0x20)
+[13616:23876:1119/202104.776:ERROR:content\browser\gpu\gpu_process_host.cc:1042] GPU process exited unexpectedly: exit_code=-1073741790
+[13616:23876:1119/202104.782:ERROR:content\browser\gpu\gpu_process_host.cc:1042] GPU process exited unexpectedly: exit_code=-1073741790
+[13616:19684:1119/202104.782:ERROR:components\viz\host\persistent_cache_sandboxed_file_factory.cc:153] Failed to open persistent cache files in directory "C:\Users\feder\AppData\Local\Temp\labextra4-browser-cli8v8pp\GPUPersistentCache\DawnGraphiteCache\23IMHJGI2WIIJ3PDLCHAHUJAGHTLTEBB", error: 0: El proceso no tiene acceso al archivo porque está siendo utilizado por otro proceso. (0x20)
+[13616:23876:1119/202104.801:ERROR:content\browser\gpu\gpu_process_host.cc:1042] GPU process exited unexpectedly: exit_code=-1073741790
+[13616:20316:1119/202104.801:ERROR:services\device\public\cpp\geolocation\system_geolocation_source_win.cc:124] Failed to create IAppCapability: Acceso denegado. (0x80070005)
+[13616:23876:1119/202104.818:ERROR:content\browser\gpu\gpu_process_host.cc:1042] GPU process exited unexpectedly: exit_code=-1073741790
+[13616:14040:1119/202104.818:ERROR:components\viz\host\persistent_cache_sandboxed_file_factory.cc:153] Failed to open persistent cache files in directory "C:\Users\feder\AppData\Local\Temp\labextra4-browser-cli8v8pp\GPUPersistentCache\DawnGraphiteCache\23IMHJGI2WIIJ3PDLCHAHUJAGHTLTEBB", error: 0: El proceso no tiene acceso al archivo porque está siendo utilizado por otro proceso. (0x20)
+[13616:23876:1119/202104.833:ERROR:content\browser\gpu\gpu_process_host.cc:1042] GPU process exited unexpectedly: exit_code=-1073741790
+[13616:23876:1119/202104.833:FATAL:content\browser\gpu\gpu_data_manager_impl_private.cc:385] GPU process isn't usable. Goodbye.
