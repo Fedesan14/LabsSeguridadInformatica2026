@@ -1,0 +1,22 @@
+commit 0abdf953b75b214af59d0cf31e55ccbf2c9873d8
+Author: dev-jperez <jperez@phantomcorp.example>
+Date:   Wed Aug 5 16:30:00 2026 -0300
+
+    wip: pasarela de pagos (falta todo)
+
+diff --git a/.env.pasarela b/.env.pasarela
+new file mode 100644
+index 0000000..4431615
+--- /dev/null
++++ b/.env.pasarela
+@@ -0,0 +1,3 @@
++# NO COMMITEAR ESTO (lo commitee igual, despues lo veo)
++PAGOS_SECRET=FLAG{git_rama_abandonada}
++PAGOS_ENDPOINT=https://pagos.phantomcorp.example
+diff --git a/pasarela.py b/pasarela.py
+new file mode 100644
+index 0000000..2da76b4
+--- /dev/null
++++ b/pasarela.py
+@@ -0,0 +1 @@
++"""Integracion con la pasarela de pagos (WIP, quedo a mitad de camino)."""

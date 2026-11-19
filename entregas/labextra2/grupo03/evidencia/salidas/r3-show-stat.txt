@@ -1,0 +1,9 @@
+commit 0abdf953b75b214af59d0cf31e55ccbf2c9873d8
+Author: dev-jperez <jperez@phantomcorp.example>
+Date:   Wed Aug 5 16:30:00 2026 -0300
+
+    wip: pasarela de pagos (falta todo)
+
+ .env.pasarela | 3 +++
+ pasarela.py   | 1 +
+ 2 files changed, 4 insertions(+)
