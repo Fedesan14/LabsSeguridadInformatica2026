@@ -1,42 +1,42 @@
 # Informe de Penetration Test — PhantomCorp "Clientes"
 
-**Cliente:** PhantomCorp S.A.  ·  **Auditor (grupo):** 03
+**Cliente:** PhantomCorp S.A.  ·  **Grupo auditor:** 03
 **Integrantes:** [PENDIENTE: nombre — usuario GitHub de cada integrante]
-**Fecha:** 2026-11-03 (reconocimiento automatizado) [PENDIENTE: fechas de la auditoría completa]  ·  **Tipo:** Caja negra  ·  **Alcance:** host `phantomcorp` (lab)
+**Fecha:** 2026-11-03 (reconocimiento automatizado) [PENDIENTE: fechas de la auditoría completa]  ·  **Modalidad:** Caja negra  ·  **Alcance:** host `phantomcorp` (lab)
 
-> **Borrador.** Lo marcado como [PENDIENTE] se completa antes de abrir el PR. Nada de lo que está sin marcar es una afirmación sin evidencia.
+> **Borrador.** Todo lo marcado como [PENDIENTE] se completará antes de abrir el PR. Lo que no está marcado cuenta con evidencia.
 
 ---
 
 ## 0. Declaración de uso de IA
 
-**Herramienta:** Claude (asistente de IA de Anthropic), usado desde Claude Code.
+**Herramienta:** Claude (asistente de IA de Anthropic), utilizado a través de Claude Code.
 
-**Para qué se usó:**
+**Usos:**
 - Diseño de la arquitectura del swarm: agentes, orquestador, bitácora, sandbox y lista de permisos (RoE).
-- Cambio al agente Enum para que lea `robots.txt` y pruebe sus rutas, con su caso de prueba.
-- Escritura del código de `entregas/labfinal/grupo03/ptaas/`: `roe.py`, `bitacora.py`, `sandbox.py`, `agentes.py`, `orquestador.py`, `panel.py`, `panel.html` y `test_ptaas.py`.
-- Redacción de la guía de pruebas `PRUEBAS.md` y de este informe.
+- Modificación del agente Enum para que consulte `robots.txt` y pruebe las rutas que allí figuran, con su test.
+- Programación de `entregas/labfinal/grupo03/ptaas/`: `roe.py`, `bitacora.py`, `sandbox.py`, `agentes.py`, `orquestador.py`, `panel.py`, `panel.html` y `test_ptaas.py`.
+- Elaboración de la guía de pruebas `PRUEBAS.md` y de este informe.
 
-**Qué partes afectó:** el código del swarm y del panel, y la guía de pruebas. Las decisiones de alcance, la elección del target y la interpretación de los resultados son nuestras [PENDIENTE: confirmar que todo el grupo está de acuerdo con esto].
+**Partes alcanzadas:** el código del swarm y del panel, y la guía de pruebas. Las decisiones sobre el alcance, la elección del objetivo y la interpretación de resultados son del grupo [PENDIENTE: confirmar que todos los integrantes están de acuerdo].
 
-**Cómo se verificó lo que devolvió:**
-- `test_ptaas.py` (determinismo, RoE, integridad de la bitácora y controles del panel) pasa.
-- La cadena de la bitácora se recalculó con `openssl dgst -hmac`, una herramienta independiente del código, y coincide.
-- Los comandos de la guía se ejecutaron en Git Bash tal como están escritos, sobre Docker Desktop 28.5.1.
-- Los códigos HTTP que devolvió el reconocimiento se revisaron a mano contra la bitácora.
-- El panel web se probó en el navegador con una corrida real contra phantomcorp.
+**Verificación del resultado entregado por la IA:**
+- Pasa `test_ptaas.py` (determinismo, RoE, integridad de la bitácora y controles del panel).
+- La cadena de la bitácora se recalculó con `openssl dgst -hmac`, herramienta ajena al código, y el resultado coincide.
+- Los comandos de la guía se corrieron en Git Bash exactamente como están escritos, sobre Docker Desktop 28.5.1.
+- Los códigos HTTP del reconocimiento se contrastaron manualmente con la bitácora.
+- El panel web se probó en el navegador con una ejecución real contra phantomcorp.
 
-**Qué NO se validó con evidencia:** [PENDIENTE: cada hallazgo se reproduce a mano antes de incluirlo en la sección 4].
+**Lo que NO está validado con evidencia:** [PENDIENTE: cada hallazgo se reproduce manualmente antes de incluirlo en la sección 4].
 
 ---
 
 ## 1. Resumen ejecutivo
 
-- **Qué se hizo:** un reconocimiento automatizado del servidor de Clientes. Se revisaron los servicios que están expuestos y las rutas web más comunes. [PENDIENTE: completar con el resto de la cadena]
-- **Resultado global:** [PENDIENTE: hasta dónde se llegó en los hitos R1 a R4]
-- **Riesgo de negocio:** [PENDIENTE: qué datos o servicios quedaron expuestos, y qué implica]
-- **Recomendación prioritaria:** [PENDIENTE: la acción número 1 que debería tomar la empresa]
+- **Trabajo realizado:** reconocimiento automatizado del servidor de Clientes: relevamiento de los servicios expuestos y de las rutas web más habituales. [PENDIENTE: completar con el resto de la cadena]
+- **Resultado general:** [PENDIENTE: hasta dónde se avanzó en los hitos R1 a R4]
+- **Riesgo para el negocio:** [PENDIENTE: qué datos o servicios quedaron expuestos y qué consecuencias tiene]
+- **Recomendación prioritaria:** [PENDIENTE: la primera medida que debería adoptar la empresa]
 
 | Severidad | Cantidad de hallazgos |
 |---|---|
@@ -49,31 +49,31 @@
 
 ## 2. Alcance y metodología
 
-**Alcance:** únicamente el host `phantomcorp` del lab.
+**Alcance:** exclusivamente el host `phantomcorp` del laboratorio.
 
-**Fuera de alcance:** cualquier otro host. La prueba de la lista de permisos intentó atacar `8.8.8.8` a propósito; la lista lo bloqueó antes de ejecutar nada, así que no salió tráfico hacia esa IP.
+**Fuera de alcance:** cualquier otro equipo. La prueba de la lista de permisos intentó deliberadamente atacar `8.8.8.8`; la lista lo rechazó antes de ejecutar nada, por lo que no se envió tráfico a esa IP.
 
-**Reglas del engagement:** sin acciones destructivas y sin denegación de servicio.
+**Reglas del engagement:** sin acciones destructivas ni denegación de servicio.
 
-**Marco seguido:** reconocimiento → enumeración → explotación → post-explotación → impacto.
+**Marco aplicado:** reconocimiento → enumeración → explotación → post-explotación → impacto.
 
-**Reconocimiento (lo que se hizo hasta ahora):**
-- **Escaneo de puertos:** `nmap -sT -sV --version-light -Pn --top-ports 100`. Se usó `--version-light` porque el `-sV` completo tardó unos 90 segundos contra este servicio, más que el límite de 60 segundos por acción que fijamos en el sandbox.
-- **Enumeración web:** se lee `/robots.txt` de cada servicio web, se extraen las rutas que ese archivo le pide a los buscadores que no indexen, y se piden esas rutas junto con 7 rutas típicas. Se registra el código HTTP de cada una.
+**Reconocimiento (avance actual):**
+- **Escaneo de puertos:** `nmap -sT -sV --version-light -Pn --top-ports 100`. Se optó por `--version-light` porque el `-sV` completo demoró cerca de 90 segundos contra este servicio, superando el tope de 60 segundos por acción definido en el sandbox.
+- **Enumeración web:** se descarga `/robots.txt` de cada servicio web, se extraen las rutas que pide no indexar a los buscadores y se consultan junto con 7 rutas comunes. Se anota el código HTTP de cada una.
 
-**Cómo se ejecutó:** cada acción corre en un contenedor Docker descartable, sin privilegios de administrador, con el sistema de archivos de solo lectura y sin capacidades de red especiales. El contenedor se borra al terminar.
+**Ejecución:** cada acción corre en un contenedor Docker descartable, sin privilegios de administrador, con el sistema de archivos en solo lectura y sin capacidades de red especiales. Al finalizar, el contenedor se elimina.
 
-**Cómo se registró:** cada propuesta y cada resultado quedan en una bitácora en la que cada línea lleva un sello criptográfico (HMAC-SHA256) calculado a partir de la línea anterior. Si alguien modifica una línea, la verificación falla en esa línea.
+**Registro:** cada propuesta y cada resultado se asientan en una bitácora donde cada línea lleva un sello criptográfico (HMAC-SHA256) calculado sobre la anterior. Si se altera una línea, la verificación falla en ese punto.
 
 ---
 
-## 3. Narrativa del ataque
+## 3. Relato del ataque
 
-El agente de reconocimiento escaneó los 100 puertos más comunes de phantomcorp y encontró el **puerto 80 abierto**, con un servicio web que nmap no pudo identificar con certeza. Después, el agente de enumeración leyó `/robots.txt` (HTTP 200). Ese archivo contiene `Disallow: /portal-rrhh`: una ruta que el sitio no enlaza desde ninguna página, pero que le pide a los buscadores no indexar. El agente la probó junto con 7 rutas típicas. Las 7 respondieron 404 (no existen), y `/portal-rrhh` respondió **200**, con el título **Portal interno RRHH** y un formulario de login. Con eso se completa el hito R1, y la flag se envió con `./ctf submit final R1`.
+El agente de reconocimiento escaneó los 100 puertos más comunes de phantomcorp y halló el **puerto 80 abierto**, con un servicio web que nmap no logró identificar con certeza. Luego, el agente de enumeración leyó `/robots.txt` (HTTP 200), que contiene `Disallow: /portal-rrhh`: una ruta que ninguna página del sitio enlaza, pero que se pide a los buscadores no indexar. El agente la probó junto con 7 rutas comunes. Las 7 devolvieron 404 (no existen) y `/portal-rrhh` devolvió **200**, con el título **Portal interno RRHH** y un formulario de login. Así se cumple el hito R1, y la flag se envió con `./ctf submit final R1`.
 
-Este paso lo hizo el swarm en una corrida automática (anexo A). Antes de que Enum leyera `robots.txt`, habíamos llegado a la misma ruta a mano (anexo D).
+Este paso lo realizó el swarm en una ejecución automática (anexo A). Antes de que Enum leyera `robots.txt`, ya habíamos llegado a la misma ruta manualmente (anexo D).
 
-[PENDIENTE: R2 (foothold), R3 (post-explotación) y R4 (impacto), en prosa, para que un colega pueda seguir el camino de principio a fin]
+[PENDIENTE: R2 (foothold), R3 (post-explotación) y R4 (impacto), en prosa, de modo que un colega pueda seguir el recorrido completo]
 
 ```
 recon/enum + robots.txt  ->  R1 portal interno (hecho)  ->  [PENDIENTE] foothold  ->  [PENDIENTE] loot  ->  [PENDIENTE] impacto
@@ -83,32 +83,32 @@ recon/enum + robots.txt  ->  R1 portal interno (hecho)  ->  [PENDIENTE] foothold
 
 ## 4. Hallazgos (detalle técnico)
 
-> Ordenados por severidad, críticos primero. Este borrador todavía no tiene hallazgos confirmados.
+> Ordenados por severidad, primero los críticos. Este borrador aún no tiene hallazgos confirmados.
 
-**Nota:** el portal `/portal-rrhh`, que completó R1, todavía no se evaluó como hallazgo. [PENDIENTE: evaluar si el formulario de login permite entrar sin credenciales (R2), y con qué severidad y CVSS]
+**Nota:** el portal `/portal-rrhh`, con el que se completó R1, todavía no fue evaluado como hallazgo. [PENDIENTE: determinar si el login permite ingresar sin credenciales (R2) y con qué severidad y CVSS]
 
 ### H-01 · [PENDIENTE: título del hallazgo]
-- **Severidad:** [PENDIENTE: Crítica/Alta/Media/Baja] · **CVSS:** [PENDIENTE: vector y score, justificados]
+- **Severidad:** [PENDIENTE: Crítica/Alta/Media/Baja] · **CVSS:** [PENDIENTE: vector y puntaje, justificados]
 - **Ubicación:** [PENDIENTE: endpoint, parámetro o archivo]
-- **Descripción:** [PENDIENTE: qué es la vulnerabilidad]
+- **Descripción:** [PENDIENTE: en qué consiste la vulnerabilidad]
 - **Evidencia (reproducible):**
   ```bash
   # [PENDIENTE: el comando exacto y su salida]
   ```
-- **Impacto:** [PENDIENTE: qué logra un atacante con esto, en ESTE sistema]
-- **Remediación:** [PENDIENTE: cómo se corrige de raíz, concreto y correcto]
+- **Impacto:** [PENDIENTE: qué obtiene un atacante, en ESTE sistema]
+- **Remediación:** [PENDIENTE: corrección de raíz, concreta y correcta]
 
 ---
 
 ## 5. Conclusión
 
-[PENDIENTE: postura de seguridad general del sistema. ¿La cadena era evitable? ¿Cuál fue el eslabón que, arreglado, la habría cortado antes?]
+[PENDIENTE: postura general de seguridad del sistema. ¿Se podía evitar la cadena? ¿Qué eslabón, de haberse corregido, la habría cortado antes?]
 
 ---
 
 ## 6. Anexo
 
-### A. Salida del reconocimiento
+### A. Resultado del reconocimiento
 
 - **Puertos abiertos:** `80/tcp` (servicio web, sin identificar con certeza)
 - **Contenido de `/robots.txt`:** `Disallow: /portal-rrhh`
@@ -132,7 +132,7 @@ curl -s -m 10 -o /dev/null -w '%{http_code}' http://phantomcorp:80/admin
 
 ### C. Estado de los hitos
 
-Salida de `./ctf status final` después de enviar la flag de R1:
+Salida de `./ctf status final` tras enviar la flag de R1:
 
 ```
    ✓  R1     Recon/enum: portal interno localizado
@@ -143,11 +143,11 @@ Salida de `./ctf status final` después de enviar la flag de R1:
   ███████░░░░░░░░░░░░░░░░░░░░░░░  1/4 (25%)
 ```
 
-[PENDIENTE: la captura de pantalla de este estado, cuando estén R2 a R4]
+[PENDIENTE: captura de pantalla de este estado cuando R2 a R4 estén completos]
 
 ### D. Pasos manuales del hito R1
 
-Esta fue la primera vez, antes de que Enum leyera `robots.txt`. Los dos pedidos se hicieron desde el sandbox, con las mismas restricciones que usa el swarm:
+Se hicieron en la primera pasada, antes de que Enum leyera `robots.txt`. Ambos pedidos salieron desde el sandbox, con las mismas restricciones del swarm:
 
 ```bash
 curl -s -m 10 -i http://phantomcorp:80/robots.txt
@@ -157,4 +157,4 @@ curl -s -m 10 -i http://phantomcorp:80/robots.txt
 curl -s -m 10 -i http://phantomcorp:80/portal-rrhh
 ```
 
-La respuesta de `/portal-rrhh` incluye la flag de R1 en un comentario HTML. Se envió con `./ctf submit final R1`.
+La respuesta de `/portal-rrhh` trae la flag de R1 en un comentario HTML. Se envió con `./ctf submit final R1`.
