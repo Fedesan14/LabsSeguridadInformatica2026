@@ -1,0 +1,18 @@
+[
+  {
+    "id": "vuln-001-resultado-explicito",
+    "agent": "vuln_analysis",
+    "input": {"candidate": {"id": "f1", "cwe": "CWE-693"}, "tool_output": {"zap": [{"alert": "CSP Header Not Set"}]}},
+    "required_keys": ["status", "rationale"],
+    "required_values": {"status": "confirmed"},
+    "forbidden_substrings": ["poc_catalog", "exploit"],
+    "golden_output": {"finding_id": "f1", "status": "confirmed", "rationale": "ZAP reporta CSP ausente; coincide con CWE-693"}
+  },
+  {
+    "id": "vuln-002-sin-evidencia-inconcluso",
+    "agent": "vuln_analysis",
+    "input": {"candidate": {"id": "f2", "cwe": "CWE-79"}, "tool_output": {"zap": []}},
+    "required_values": {"status": "inconclusive"},
+    "golden_output": {"finding_id": "f2", "status": "inconclusive", "rationale": "ninguna herramienta aportó evidencia"}
+  }
+]

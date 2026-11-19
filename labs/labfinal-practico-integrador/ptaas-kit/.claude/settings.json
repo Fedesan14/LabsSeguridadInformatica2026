@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "Bash(pytest:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(mypy:*)",
+      "Bash(ruff:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": [
+      "Bash(nmap:*)",
+      "Bash(masscan:*)",
+      "Bash(nuclei:*)",
+      "Bash(sqlmap:*)",
+      "Bash(hydra:*)",
+      "Bash(msfconsole:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/block_direct_security_tools.py"
+          }
+        ]
+      }
+    ]
+  }
+}

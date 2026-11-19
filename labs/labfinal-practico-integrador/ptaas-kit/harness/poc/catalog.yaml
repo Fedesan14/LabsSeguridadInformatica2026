@@ -1,0 +1,87 @@
+# Catálogo de verificaciones del MVP — versionado y aprobado.
+# Diseño deliberado: TODAS son verificaciones INERTES ("canario"): confirman una
+# debilidad observando la respuesta, sin ejecutar código en el objetivo, sin extraer
+# datos y sin alterar su estado. Ampliar el catálogo requiere un change OpenSpec,
+# revisión del security-reviewer y aprobación humana registrada.
+catalog_version: "0.1.0"
+
+entries:
+  - id: POC-HDR-001
+    version: "1.0.0"
+    title: Falta de protección contra clickjacking (X-Frame-Options / frame-ancestors)
+    cwe: CWE-1021
+    kind: inert_check
+    method: GET
+    parameters: [base_url, path]
+    evaluator: header_missing_frame_protection
+    lab_targets: [dvwa, juice-shop]
+    lab_only: true
+    approved_by: reviewer@lab
+    approved_at: "2026-10-30"
+
+  - id: POC-CSP-001
+    version: "1.0.0"
+    title: Ausencia de Content-Security-Policy
+    cwe: CWE-693
+    kind: inert_check
+    method: GET
+    parameters: [base_url, path]
+    evaluator: header_missing_csp
+    lab_targets: [dvwa, juice-shop]
+    lab_only: true
+    approved_by: reviewer@lab
+    approved_at: "2026-10-30"
+
+  - id: POC-COOKIE-001
+    version: "1.0.0"
+    title: Cookie de sesión sin flags Secure / HttpOnly / SameSite
+    cwe: CWE-614
+    kind: inert_check
+    method: GET
+    parameters: [base_url, path]
+    evaluator: cookie_flags_missing
+    lab_targets: [dvwa, juice-shop]
+    lab_only: true
+    approved_by: reviewer@lab
+    approved_at: "2026-10-30"
+
+  - id: POC-DIRLIST-001
+    version: "1.0.0"
+    title: Listado de directorio habilitado
+    cwe: CWE-548
+    kind: inert_check
+    method: GET
+    parameters: [base_url, path]
+    evaluator: directory_listing_enabled
+    lab_targets: [dvwa, juice-shop]
+    lab_only: true
+    approved_by: reviewer@lab
+    approved_at: "2026-10-30"
+
+  - id: POC-REFLECT-001
+    version: "1.0.0"
+    title: Reflexión de entrada sin codificar (verificación con canario inerte)
+    cwe: CWE-79
+    kind: inert_check
+    method: GET
+    # El canario es un identificador único + caracteres especiales; no contiene
+    # marcado ejecutable. Solo se observa si la respuesta lo refleja sin codificar.
+    parameters: [base_url, path, param_name]
+    evaluator: input_reflected_unencoded
+    lab_targets: [dvwa, juice-shop]
+    lab_only: true
+    approved_by: reviewer@lab
+    approved_at: "2026-10-30"
+
+  - id: POC-ERRDISC-001
+    version: "1.0.0"
+    title: Divulgación de trazas de error / versiones en respuestas de error
+    cwe: CWE-209
+    kind: inert_check
+    method: GET
+    parameters: [base_url, path]
+    evaluator: verbose_error_disclosure
+    lab_targets: [dvwa, juice-shop]
+    lab_only: true
+    approved_by: reviewer@lab
+    approved_at: "2026-10-30"

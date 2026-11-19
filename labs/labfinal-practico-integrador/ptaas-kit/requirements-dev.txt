@@ -1,0 +1,7 @@
+-r requirements.txt
+pytest>=8
+ruff
+mypy
+types-PyYAML
+# Opcional, solo para evals en vivo (evals/run_evals.py --mode live)
+# anthropic

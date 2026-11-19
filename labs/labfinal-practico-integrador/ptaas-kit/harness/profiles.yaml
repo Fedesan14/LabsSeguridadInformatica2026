@@ -1,0 +1,38 @@
+# Perfiles de ejecución de herramientas (solo configuración defensiva y acotada).
+# Cambios = delta de spec + revisión del security-reviewer.
+# Verificá cada flag contra la versión instalada (`nmap -h`, `nuclei -h`) antes de usar.
+version: 1
+
+nmap:
+  binary: nmap
+  # Detección de servicios sobre puertos frecuentes, ritmo moderado.
+  fixed_args: ["-sV", "-T3", "--open", "--top-ports", "100"]
+  max_rate_pps: 100
+  forbidden_args:        # nunca permitidos, aunque un agente los proponga
+    - "--script"
+    - "-sC"
+    - "-A"
+    - "-O"
+    - "--script-args"
+    - "-iL"
+    - "--proxies"
+    - "-sU"
+  timeout_s: 300
+  output: xml
+
+nuclei:
+  binary: nuclei
+  # Directorio de templates CURADO y revisado: el control principal.
+  templates_dir: "templates/allowlist"
+  include_tags: ["tech", "exposure", "misconfig", "headers", "panel"]
+  exclude_tags: ["intrusive", "dos", "fuzz", "bruteforce", "rce", "sqli", "xss", "oast", "cve", "kev"]
+  # Flags de seguridad: sin OAST/Interactsh (sin tráfico a terceros), sin auto-actualización.
+  fixed_args: ["-jsonl", "-silent", "-ni", "-duc", "-disable-update-check"]
+  rate_limit_rps: 5
+  timeout_s: 600
+  output: jsonl
+
+targets:
+  # En desarrollo solo se permiten estos hosts de laboratorio (red aislada).
+  lab_only_domains: ["dvwa.lab.test", "juiceshop.lab.test"]
+  lab_only_cidrs: ["10.99.0.0/24"]

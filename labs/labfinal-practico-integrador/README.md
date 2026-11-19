@@ -11,6 +11,26 @@
 
 ---
 
+## 🤖 Variante capstone avanzada — Desafío PTaaS (con agentes de IA)
+
+Además del engagement clásico de arriba, hay una **variante de autor** mucho más
+ambiciosa: en vez de *hacer* el pentest a mano, **construís la plataforma** que lo
+hace — un *Pentest as a Service* gobernado por un swarm de agentes, con
+autorización determinista, bitácora y validación en sandbox. Es un proyecto
+spec-driven de ~15 días, pensado para equipos.
+
+- **Carpeta:** [`ptaas-kit/`](ptaas-kit/) · empezá por su [`README.md`](ptaas-kit/README.md)
+- **Qué hay que hacer:** [`docs/enunciado-alumnos.md`](ptaas-kit/docs/enunciado-alumnos.md)
+- **Cómo construirlo:** [`docs/marco-teorico.md`](ptaas-kit/docs/marco-teorico.md) · [`docs/plan-15-dias.md`](ptaas-kit/docs/plan-15-dias.md)
+- **Cómo se evalúa:** [`docs/rubrica-evaluacion.md`](ptaas-kit/docs/rubrica-evaluacion.md)
+- **Funciona con Claude Code o con opencode:** ver [`AGENTS.md`](ptaas-kit/AGENTS.md)
+- **Presentación del desafío:** [`presentacion/ptaas-desafio.pptx`](ptaas-kit/presentacion/ptaas-desafio.pptx)
+
+> Esta variante es un proyecto de ingeniería de seguridad, no un CTF. El foco no
+> es romper: es **diseñar el control** que hace el pentest seguro y auditable.
+
+---
+
 ## El encargo
 
 PhantomCorp te contrata para una auditoría de caja negra de su nuevo sistema

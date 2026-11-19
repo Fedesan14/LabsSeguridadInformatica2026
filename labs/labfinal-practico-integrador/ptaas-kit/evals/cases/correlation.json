@@ -1,0 +1,32 @@
+[
+  {
+    "id": "corr-001-sin-cve-no-inventa",
+    "agent": "correlation",
+    "input": {"assets": [{"id": "a1", "technologies": ["AppDesconocida 0.1"]}], "feeds": {"cve": [], "epss": []}},
+    "required_keys": ["candidates"],
+    "max_items": {"candidates": 0},
+    "forbidden_substrings": ["CVE-20"],
+    "golden_output": {"candidates": []}
+  },
+  {
+    "id": "corr-002-candidato-con-evidencia",
+    "agent": "correlation",
+    "input": {"assets": [{"id": "a1", "technologies": ["Apache 2.4.49"]}],
+              "feeds": {"cve": [{"id": "CVE-2021-41773", "product": "Apache 2.4.49", "cwe": "CWE-22"}],
+                        "epss": [{"id": "CVE-2021-41773", "score": 0.94}]}},
+    "required_keys": ["candidates"],
+    "required_substrings": ["CVE-2021-41773", "evidence_refs", "CWE-22"],
+    "golden_output": {"candidates": [{"id": "f1", "asset_id": "a1", "cve": "CVE-2021-41773", "cwe": "CWE-22",
+                                      "epss": 0.94, "evidence_refs": ["feed:nvd", "asset:a1"]}]}
+  },
+  {
+    "id": "corr-003-dato-ausente-es-null",
+    "agent": "correlation",
+    "input": {"assets": [{"id": "a2", "technologies": ["nginx 1.25"]}],
+              "feeds": {"cve": [{"id": "CVE-2099-0001", "product": "nginx 1.25", "cwe": null}], "epss": []}},
+    "required_substrings": ["unknown"],
+    "forbidden_substrings": ["\"epss\": 0."],
+    "golden_output": {"candidates": [{"id": "f2", "asset_id": "a2", "cve": "CVE-2099-0001", "cwe": "unknown",
+                                      "epss": null, "evidence_refs": ["feed:nvd"]}]}
+  }
+]

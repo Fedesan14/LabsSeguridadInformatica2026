@@ -1,0 +1,85 @@
+# Catálogo de herramientas y adaptadores. Debe ser coherente con policy.yaml:
+# toda capability listada acá y habilitada en una fase aparece en policy.phases.<fase>.allowed.
+version: 1
+
+mvp:
+  - capability: subfinder.enum
+    tool: subfinder
+    phase: recon
+    mode: passive
+    destructive: false
+    output: jsonl
+  - capability: httpx.probe
+    tool: httpx
+    phase: recon
+    mode: active_light
+    destructive: false
+    output: jsonl
+  - capability: nmap.service_scan
+    tool: nmap
+    phase: recon
+    mode: active
+    destructive: false
+    output: xml
+    notes: perfil acotado (puertos/servicios), rate limit de policy.yaml
+  - capability: cve.lookup
+    tool: nvd_feed
+    phase: correlate
+    mode: data_only
+    destructive: false
+    output: json
+  - capability: epss.lookup
+    tool: epss_feed
+    phase: correlate
+    mode: data_only
+    destructive: false
+    output: json
+  - capability: cwe.map
+    tool: cwe_catalog
+    phase: correlate
+    mode: data_only
+    destructive: false
+    output: json
+  - capability: zap.baseline_scan
+    tool: owasp_zap
+    phase: analyze
+    mode: passive_baseline
+    destructive: false
+    output: json
+  - capability: nuclei.safe_templates
+    tool: nuclei
+    phase: analyze
+    mode: active_light
+    destructive: false
+    output: jsonl
+    notes: solo templates de una allow-list revisada (sin severidad intrusiva/fuzzing)
+  - capability: defectdojo.export
+    tool: defectdojo
+    phase: report
+    mode: api
+    destructive: false
+    output: json
+  - capability: report.render
+    tool: internal_report
+    phase: report
+    mode: local
+    destructive: false
+    output: markdown+json
+  - capability: poc_catalog.run_parametrized
+    tool: internal_poc_catalog
+    phase: validate
+    mode: sandbox_only
+    destructive: false
+    output: json
+    notes: catálogo interno versionado y aprobado; requiere gate HITL por hallazgo
+
+post_mvp:
+  - amass.passive          # recon pasivo ampliado
+  - trivy.scan             # imágenes, IaC y supply chain
+  - greenbone.scan         # vulns de infraestructura
+  - wapiti.scan            # segundo motor DAST
+  - theharvester.osint
+
+descartadas_mvp:
+  - masscan                # ritmo agresivo y licencia AGPL; riesgo de degradar el servicio
+  - nikto                  # ruido alto y poco aporte frente a ZAP + Nuclei

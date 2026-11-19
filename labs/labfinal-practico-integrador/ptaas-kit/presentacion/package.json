@@ -1,0 +1,9 @@
+{
+  "name": "ptaas-desafio-deck",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Generador del deck del desafío PTaaS",
+  "license": "AGPL-3.0-or-later",
+  "scripts": { "build": "node build_deck.js" },
+  "dependencies": { "pptxgenjs": "4.0.1" }
+}

@@ -1,0 +1,63 @@
+# Ruteo de modelos por agente de RUNTIME del swarm.
+# Criterio: capacidad de razonamiento donde hay planificación/riesgo; modelo
+# liviano donde hay volumen/parsing; código determinista donde se exige garantía.
+version: 1
+
+defaults:
+  max_retries: 2
+  timeout_s: 120
+  log_prompts: true            # para trazabilidad (bitácora/ISO)
+
+agents:
+  orchestrator:
+    model: claude-opus-5-5
+    temperature: 0.2
+    max_tokens: 4096
+    rationale: planificación de fases y enrutamiento; errores caros
+
+  scope_guard:
+    model: null                # CÓDIGO DETERMINISTA (harness/contracts.py:Guard)
+    rationale: la autorización no puede depender de un LLM
+
+  asset_discovery:
+    model: claude-sonnet-5-5
+    temperature: 0.1
+    max_tokens: 4096
+    rationale: decide próximos pasos de recon sobre salida de tools
+
+  correlation:
+    model: claude-sonnet-5-5
+    temperature: 0.0
+    max_tokens: 4096
+    rationale: mapeo activo↔CVE/CWE; salida estructurada
+
+  vuln_analysis:
+    model: claude-sonnet-5-5
+    temperature: 0.1
+    max_tokens: 6144
+    rationale: formula/refina hipótesis (loop B), análisis no destructivo
+
+  validation:
+    model: claude-opus-5-5
+    temperature: 0.0
+    max_tokens: 4096
+    rationale: selección y parametrización del PoC del catálogo; máxima precisión + gate HITL
+
+  reporting:
+    model: claude-sonnet-5-5
+    temperature: 0.3
+    max_tokens: 8192
+    rationale: redacción de hallazgos y remediación
+
+  triage_parser:
+    model: claude-haiku-5-5
+    temperature: 0.0
+    max_tokens: 1024
+    rationale: normalizar/deduplicar salida de herramientas (alto volumen, bajo riesgo)
+
+  reviewer:
+    model: null                # HUMANO (gate HITL)
+
+output_contracts:
+  # Toda respuesta de agente debe validar contra un schema Pydantic; si falla, reintento y luego escalado a HITL.
+  enforce_json_schema: true

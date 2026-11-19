@@ -1,0 +1,5 @@
+# Retos del Lab Extra 5 — JWT inseguro.  id|titulo|sha256(flag)
+# Entregá con:  ./ctf submit extra5 R1 'FLAG{...}'
+R1|El payload viaja en claro (base64 no es cifrado)|cf82da086f16a9752e53a1b6b9d8117377c2723e921bde196249747672bb8d0d
+R2|Secreto debil crackeado -> token forjado con role=admin|fd51408efce058748f2ee3ee64a8c30bea8e26d82166aa8c31df39cc23ba088e
+R3|Suplantacion por claim: sub=maria (IDOR via JWT)|a070b3f625df6f0f5b7255f27aea418ad3a1a80e993905d743bad3ae606c082a

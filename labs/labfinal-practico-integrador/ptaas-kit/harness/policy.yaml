@@ -1,0 +1,39 @@
+# Política del harness: allow-list de capabilities por fase y gates HITL.
+# Fuente de verdad para Guard.phase_allowlist. Cambios = delta de spec `authorization`.
+version: 1
+
+phases:
+  recon:
+    allowed: [subfinder.enum, httpx.probe, nmap.service_scan]
+    token_ttl_minutes: 60
+  correlate:
+    allowed: [cve.lookup, epss.lookup, cwe.map]     # solo datos, sin tocar activos
+    token_ttl_minutes: 30
+  analyze:
+    allowed: [zap.baseline_scan, nuclei.safe_templates]
+    token_ttl_minutes: 60
+  validate:
+    allowed: [poc_catalog.run_parametrized]          # solo catálogo versionado, en sandbox
+    token_ttl_minutes: 15
+  report:
+    allowed: [defectdojo.export, report.render]
+    token_ttl_minutes: 30
+
+gates_hitl:
+  - before: validate        # aprobación por hallazgo
+    approver_role: reviewer
+  - before: deliver
+    approver_role: reviewer
+  - before: first_active_action
+    approver_role: reviewer
+
+limits:
+  max_loop_iterations: {recon: 5, detection: 4, validation: 2}
+  rate_limit_rps_per_target: 5
+  destructive_actions: forbidden      # fuera del MVP
+
+sandbox:
+  network: isolated
+  ephemeral: true
+  persistence: none
+  poc_source: poc_catalog_versioned   # nunca síntesis de exploits nuevos

@@ -1,0 +1,33 @@
+# Laboratorio aislado para desarrollo y tests (NO probado en el entorno de generación del kit).
+# La red es `internal: true`: sin salida a internet. Los objetivos solo se alcanzan desde el
+# contenedor `runner`, donde se monta el proyecto y se corre todo lo que toca el laboratorio.
+#
+#   docker compose -f lab/docker-compose.yml up -d
+#   docker compose -f lab/docker-compose.yml exec runner bash
+#
+# Los alias coinciden con `targets.lab_only_domains` de harness/profiles.yaml.
+services:
+  dvwa:
+    image: vulnerables/web-dvwa
+    networks:
+      lab:
+        aliases: [dvwa.lab.test]
+
+  juiceshop:
+    image: bkimminich/juice-shop
+    networks:
+      lab:
+        aliases: [juiceshop.lab.test]
+
+  runner:
+    image: python:3.12-slim
+    working_dir: /work
+    volumes:
+      - ..:/work
+    command: sleep infinity
+    networks:
+      - lab
+
+networks:
+  lab:
+    internal: true

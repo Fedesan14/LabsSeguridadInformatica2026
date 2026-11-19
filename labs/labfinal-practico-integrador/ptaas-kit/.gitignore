@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Secretos y configuración local: NUNCA se suben
+.env
+.env.*
+*.pem
+*.key
+secrets/
+
+# Datos generados por ejecuciones
+*.db
+*.sqlite
+*.sqlite3
+audit/*.db
+reports/
+evidence/
+
+# Herramientas y editores
+node_modules/
+.DS_Store
+.idea/
+.vscode/
+
+# Claude Code: configuración personal (la compartida es .claude/settings.json)
+.claude/settings.local.json
