@@ -1,0 +1,19 @@
+commit bc9d0dbe6aca41d639a515395cc983e139979102
+Author: dev-jperez <jperez@phantomcorp.example>
+Date:   Wed Aug 12 14:22:00 2026 -0300
+
+    wip: notas del cluster nuevo (no mergear todavia)
+
+diff --git a/notas_investigacion.txt b/notas_investigacion.txt
+new file mode 100644
+index 0000000..fc979fd
+--- /dev/null
++++ b/notas_investigacion.txt
+@@ -0,0 +1,7 @@
++NOTAS — pruebas de acceso al cluster nuevo (NO SUBIR)
++====================================================
++El equipo de infra me paso la llave del cluster de staging para probar:
++
++    staging_key: FLAG{git_reflog_rescata}
++
++Cuando este todo migrado esto se rota y estas notas se borran.

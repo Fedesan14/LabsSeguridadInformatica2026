@@ -1,0 +1,8 @@
+commit bc9d0dbe6aca41d639a515395cc983e139979102
+Author: dev-jperez <jperez@phantomcorp.example>
+Date:   Wed Aug 12 14:22:00 2026 -0300
+
+    wip: notas del cluster nuevo (no mergear todavia)
+
+ notas_investigacion.txt | 7 +++++++
+ 1 file changed, 7 insertions(+)
