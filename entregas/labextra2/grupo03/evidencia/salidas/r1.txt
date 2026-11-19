@@ -1,0 +1,112 @@
+commit fa714bda2ac9d31bf92774e901400be4a296c1e5
+Author: dev-jperez <jperez@phantomcorp.example>
+Date:   Thu Aug 20 11:00:00 2026 -0300
+
+    docs: estado del proyecto
+
+diff --git a/README.md b/README.md
+index 9211cb8..beba5ec 100644
+--- a/README.md
++++ b/README.md
+@@ -1,3 +1,7 @@
+ # deploy-tool
+ 
+ Herramienta interna de deploys. El token va por variable de entorno.
++
++## Estado
++
++Listo para produccion. Historia limpia. Sin secretos. ✅
+
+commit eafb81c3ec5790ce4741629458e11ab5c1a690b8
+Author: dev-jperez <jperez@phantomcorp.example>
+Date:   Tue Aug 11 10:05:00 2026 -0300
+
+    fix: sacar credenciales del codigo (ups)
+
+diff --git a/config.py b/config.py
+index 04e01ad..3d61e50 100644
+--- a/config.py
++++ b/config.py
+@@ -1,4 +1,3 @@
+-# Config de emergencia — arreglar el deploy roto YA (después lo pasamos a env)
+-PHANTOM_API_TOKEN = "FLAG{git_log_no_olvida}"
++# Config — sin secretos, por fin
+ REGION = "us-east-1"
+-DEBUG = True
++DEBUG = False
+
+commit 9333f2b4a09f7a320cb66d621c3bd53b4f694941
+Author: dev-jperez <jperez@phantomcorp.example>
+Date:   Mon Aug 10 18:47:00 2026 -0300
+
+    hotfix: deploy roto en produccion (config temporal)
+
+diff --git a/config.py b/config.py
+new file mode 100644
+index 0000000..04e01ad
+--- /dev/null
++++ b/config.py
+@@ -0,0 +1,4 @@
++# Config de emergencia — arreglar el deploy roto YA (después lo pasamos a env)
++PHANTOM_API_TOKEN = "FLAG{git_log_no_olvida}"
++REGION = "us-east-1"
++DEBUG = True
+
+commit de33a75843139302dfbe034cab11e8175881540e
+Author: dev-jperez <jperez@phantomcorp.example>
+Date:   Mon Aug 10 09:12:00 2026 -0300
+
+    inicial: deploy-tool con token por variable de entorno
+
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..9211cb8
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,3 @@
++# deploy-tool
++
++Herramienta interna de deploys. El token va por variable de entorno.
+diff --git a/app.py b/app.py
+new file mode 100644
+index 0000000..4400058
+--- /dev/null
++++ b/app.py
+@@ -0,0 +1,14 @@
++#!/usr/bin/env python3
++"""deploy-tool — automatiza el deploy de la intranet PhantomCorp."""
++import os
++
++API_URL = "https://api.phantomcorp.example/v2"
++
++def deploy(entorno: str) -> None:
++    token = os.environ.get("PHANTOM_API_TOKEN")
++    if not token:
++        raise SystemExit("Falta PHANTOM_API_TOKEN en el entorno")
++    print(f"deploy a {entorno} contra {API_URL} (token ***)")
++
++if __name__ == "__main__":
++    deploy("staging")
+
+commit 0abdf953b75b214af59d0cf31e55ccbf2c9873d8
+Author: dev-jperez <jperez@phantomcorp.example>
+Date:   Wed Aug 5 16:30:00 2026 -0300
+
+    wip: pasarela de pagos (falta todo)
+
+diff --git a/.env.pasarela b/.env.pasarela
+new file mode 100644
+index 0000000..4431615
+--- /dev/null
++++ b/.env.pasarela
+@@ -0,0 +1,3 @@
++# NO COMMITEAR ESTO (lo commitee igual, despues lo veo)
++PAGOS_SECRET=FLAG{git_rama_abandonada}
++PAGOS_ENDPOINT=https://pagos.phantomcorp.example
+diff --git a/pasarela.py b/pasarela.py
+new file mode 100644
+index 0000000..2da76b4
+--- /dev/null
++++ b/pasarela.py
+@@ -0,0 +1 @@
++"""Integracion con la pasarela de pagos (WIP, quedo a mitad de camino)."""
