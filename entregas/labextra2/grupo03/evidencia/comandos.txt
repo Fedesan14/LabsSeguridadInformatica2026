@@ -1,0 +1,39 @@
+
+# ==========================================
+# LABORATORIO EXTRA 2 - GRUPO 03
+# Comandos Git utilizados durante la investigacion
+# ==========================================
+
+# R1 - Historial de commits (git log -p)
+git log --oneline --all
+git log -p --all
+git log -p --all > ../../../../entregas/labextra2/grupo03/evidencia/salidas/r1.txt
+git log -p --all > ../../../../entregas/labextra2/grupo03/evidencia/salidas/r1.txt
+
+# R2 - Recuperacion de commit perdido (reflog / fsck)
+git reflog --all
+git show --stat bc9d0db
+git show bc9d0db
+git fsck --full --no-reflogs --unreachable
+
+git reflog --all > ../../../../entregas/labextra2/grupo03/evidencia/salidas/r2-reflog.txt
+git show --stat bc9d0db > ../../../../entregas/labextra2/grupo03/evidencia/salidas/r2-show-stat.txt
+git show bc9d0db > ../../../../entregas/labextra2/grupo03/evidencia/salidas/r2-show.txt
+git fsck --full --no-reflogs --unreachable > ../../../../entregas/labextra2/grupo03/evidencia/salidas/r2-fsck.txt
+
+# R3 - Rama abandonada
+git branch -a
+git log --oneline --all --decorate
+git log -p feature/pasarela-pagos
+git show --stat 0abdf95
+git show 0abdf95
+
+git log -p feature/pasarela-pagos > ../../../../entregas/labextra2/grupo03/evidencia/salidas/r3-log.txt
+git show --stat 0abdf95 > ../../../../entregas/labextra2/grupo03/evidencia/salidas/r3-show-stat.txt
+git show 0abdf95 > ../../../../entregas/labextra2/grupo03/evidencia/salidas/r3-show.txt
+
+# Verificacion final del reflog con fechas
+git reflog --all --date=iso
+
+# Actualizacion de evidencia R2 con fechas
+git reflog --all --date=iso > ../../../../entregas/labextra2/grupo03/evidencia/salidas/r2-reflog.txt

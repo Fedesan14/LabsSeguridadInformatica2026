@@ -1,17 +1,17 @@
-fa714bd refs/heads/main@{0}: commit: docs: estado del proyecto
-fa714bd HEAD@{0}: commit: docs: estado del proyecto
-eafb81c refs/heads/main@{1}: reset: moving to HEAD~1
-bc9d0db refs/heads/main@{2}: commit: wip: notas del cluster nuevo (no mergear todavia)
-eafb81c refs/heads/main@{3}: commit: fix: sacar credenciales del codigo (ups)
-9333f2b refs/heads/main@{4}: commit: hotfix: deploy roto en produccion (config temporal)
-de33a75 refs/heads/main@{5}: commit (initial): inicial: deploy-tool con token por variable de entorno
-0abdf95 refs/heads/feature/pasarela-pagos@{0}: commit: wip: pasarela de pagos (falta todo)
-9333f2b refs/heads/feature/pasarela-pagos@{1}: branch: Created from HEAD~1
-eafb81c HEAD@{1}: checkout: moving from feature/pasarela-pagos to main
-0abdf95 HEAD@{2}: commit: wip: pasarela de pagos (falta todo)
-9333f2b HEAD@{3}: checkout: moving from main to feature/pasarela-pagos
-eafb81c HEAD@{4}: reset: moving to HEAD~1
-bc9d0db HEAD@{5}: commit: wip: notas del cluster nuevo (no mergear todavia)
-eafb81c HEAD@{6}: commit: fix: sacar credenciales del codigo (ups)
-9333f2b HEAD@{7}: commit: hotfix: deploy roto en produccion (config temporal)
-de33a75 HEAD@{8}: commit (initial): inicial: deploy-tool con token por variable de entorno
+fa714bd refs/heads/main@{2026-08-20 11:00:00 -0300}: commit: docs: estado del proyecto
+fa714bd HEAD@{2026-08-20 11:00:00 -0300}: commit: docs: estado del proyecto
+eafb81c refs/heads/main@{2026-08-12 14:22:00 -0300}: reset: moving to HEAD~1
+bc9d0db refs/heads/main@{2026-08-12 14:22:00 -0300}: commit: wip: notas del cluster nuevo (no mergear todavia)
+eafb81c refs/heads/main@{2026-08-11 10:05:00 -0300}: commit: fix: sacar credenciales del codigo (ups)
+9333f2b refs/heads/main@{2026-08-10 18:47:00 -0300}: commit: hotfix: deploy roto en produccion (config temporal)
+de33a75 refs/heads/main@{2026-08-10 09:12:00 -0300}: commit (initial): inicial: deploy-tool con token por variable de entorno
+0abdf95 refs/heads/feature/pasarela-pagos@{2026-08-05 16:30:00 -0300}: commit: wip: pasarela de pagos (falta todo)
+9333f2b refs/heads/feature/pasarela-pagos@{2026-08-05 16:30:00 -0300}: branch: Created from HEAD~1
+eafb81c HEAD@{2026-08-05 16:30:00 -0300}: checkout: moving from feature/pasarela-pagos to main
+0abdf95 HEAD@{2026-08-05 16:30:00 -0300}: commit: wip: pasarela de pagos (falta todo)
+9333f2b HEAD@{2026-08-05 16:30:00 -0300}: checkout: moving from main to feature/pasarela-pagos
+eafb81c HEAD@{2026-08-12 14:22:00 -0300}: reset: moving to HEAD~1
+bc9d0db HEAD@{2026-08-12 14:22:00 -0300}: commit: wip: notas del cluster nuevo (no mergear todavia)
+eafb81c HEAD@{2026-08-11 10:05:00 -0300}: commit: fix: sacar credenciales del codigo (ups)
+9333f2b HEAD@{2026-08-10 18:47:00 -0300}: commit: hotfix: deploy roto en produccion (config temporal)
+de33a75 HEAD@{2026-08-10 09:12:00 -0300}: commit (initial): inicial: deploy-tool con token por variable de entorno
