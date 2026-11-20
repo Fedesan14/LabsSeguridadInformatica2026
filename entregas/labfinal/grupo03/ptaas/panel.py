@@ -26,7 +26,8 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from agentes import AgenteEnum, AgentePicaro, AgenteRecon, hallazgos_http
+from agentes import (AgenteEnum, AgenteFoothold, AgenteImpacto, AgenteLoot,
+                     AgentePicaro, AgenteRecon, hallazgos_http)
 from bitacora import Bitacora, verificar
 from orquestador import correr
 from roe import OBJETIVO
@@ -85,10 +86,15 @@ def chequear_docker():
 
 def _corrida(bitacora):
     try:
-        pizarra = correr([AgenteRecon(), AgenteEnum()], bitacora, ejecutar_docker)
+        swarm = [AgenteRecon(), AgenteEnum(), AgenteFoothold(), AgenteLoot(), AgenteImpacto()]
+        pizarra = correr(swarm, bitacora, ejecutar_docker)
         estado["hallazgos"] = {
             "puertos": pizarra.get("puertos", {}),
             "rutas": [{"puerto": p, "ruta": r, "codigo": c} for (p, r), c in sorted(hallazgos_http(pizarra).items())],
+            "foothold": pizarra.get("foothold") is not None,
+            "token": pizarra.get("token"),
+            "impacto": pizarra.get("impacto") is not None,
+            "flags": pizarra.get("flags", []),
         }
         estado["cabeza"] = bitacora.ultimo
     except Exception as e:

@@ -16,9 +16,11 @@ import threading
 from http.server import ThreadingHTTPServer
 
 import panel
-from agentes import AgenteEnum, AgentePicaro, AgenteRecon, hallazgos_http
+from agentes import (AgenteEnum, AgenteFoothold, AgenteImpacto, AgenteLoot,
+                     AgentePicaro, AgenteRecon, hallazgos_http)
 from bitacora import Bitacora, verificar
 from orquestador import correr
+from roe import Accion, validar
 
 CLAVE = b"clave-de-prueba"
 NMAP = ("PORT   STATE SERVICE VERSION\n"
@@ -28,16 +30,44 @@ NMAP = ("PORT   STATE SERVICE VERSION\n"
 
 ROBOTS = "User-agent: *\nDisallow: /portal-rrhh\nDisallow: /x;rm -rf /\n"
 
+# Cuerpos fijos del sandbox falso para R1–R4. Las FLAG{...} son de prueba, no las
+# reales del target: el test comprueba que el agente extrae la flag que venga en la
+# respuesta, no un valor concreto.
+PORTAL = ("<!doctype html><title>Portal RRHH</title><h1>Portal interno RRHH</h1>"
+          "<form method=post action=/portal/login><input name=user></form>"
+          "<!-- recon: portal interno localizado. FLAG{demo_recon} -->")
+FOOTHOLD = ("Bienvenido admin. Dashboard RRHH.\nFLAG{demo_foothold}\n"
+            "Backup de config disponible en: /backup/rrhh.conf\n")
+BACKUP = ("DB_USER=rrhh_app\nDB_PASS=Rh-2026\nAPI_TOKEN=phantom-api-7c1e\n"
+          "# token en /api/reporte?token=...&cmd=... FLAG{demo_token}\n")
+IMPACTO = ("$ cat /app/priv/clientes.db.txt\n"
+           "clientes: 48210 registros (nombre, DNI, tarjeta). FLAG{demo_crown}\n")
+
 
 def falso(llamadas):
     def ejecutar(argv):
         llamadas.append(argv)
         if argv[0] == "nmap":
             return 0, NMAP
-        if "-w" not in argv:
+        if "--data" in argv:            # curl_post: login con SQLi (R2)
+            return 0, FOOTHOLD
+        if "-G" in argv:                # curl_api: comando con token (R4)
+            return 0, IMPACTO
+        if "-w" in argv:                # curl: sólo el código HTTP (enum)
+            return 0, "200" if argv[-1].endswith((":80/interno", ":80/portal-rrhh")) else "404"
+        url = argv[-1]                  # curl_cuerpo: lee el cuerpo
+        if url.endswith("robots.txt"):
             return 0, ROBOTS
-        return 0, "200" if argv[-1].endswith((":80/interno", ":80/portal-rrhh")) else "404"
+        if url.endswith("/portal-rrhh"):
+            return 0, PORTAL
+        if url.endswith("/backup/rrhh.conf"):
+            return 0, BACKUP
+        return 0, ROBOTS
     return ejecutar
+
+
+def cadena():
+    return [AgenteRecon(), AgenteEnum(), AgenteFoothold(), AgenteLoot(), AgenteImpacto()]
 
 
 def corrida(ruta, agentes):
@@ -108,6 +138,31 @@ with tempfile.TemporaryDirectory() as d:
     assert [e["evento"] for e in eventos] == ["rechazada"] * 4
     assert [e["datos"]["motivo"].split(":")[0] for e in eventos] == [
         "fuera de alcance", "parámetro inválido", "herramienta no permitida", "puerto inválido"]
+
+    # Cadena completa R1–R4 contra el sandbox falso: determinista y con las 4 flags.
+    rc1, rc2 = os.path.join(d, "full1.jsonl"), os.path.join(d, "full2.jsonl")
+    bc1, piz, _ = corrida(rc1, cadena())
+    bc2, _, _ = corrida(rc2, cadena())
+    assert leer(rc1) == leer(rc2) and bc1.ultimo == bc2.ultimo, "la cadena completa también es determinista"
+    assert piz.get("foothold") and piz.get("impacto"), "R2 y R4 dejaron resultado en la pizarra"
+    assert piz.get("token") == "phantom-api-7c1e", "R3 looteó el token del backup de config"
+    assert piz.get("flags") == ["FLAG{demo_recon}", "FLAG{demo_foothold}", "FLAG{demo_token}", "FLAG{demo_crown}"], \
+        "las 4 flags salen en el orden de la cadena"
+
+    # El catálogo es la única vía para explotar: un PoC inventado o cruzado no pasa la RoE.
+    for mala, motivo in [
+        (Accion("x", "curl_post", "phantomcorp", 80, "/portal/login"), "PoC fuera del catálogo"),
+        (Accion("x", "curl_post", "phantomcorp", 80, "/portal/login", poc="inventado"), "PoC fuera del catálogo"),
+        (Accion("x", "curl_api", "phantomcorp", 80, "/api/reporte", poc="sqli-bypass-login", token="t"), "no es de"),
+        (Accion("x", "curl_api", "phantomcorp", 80, "/api/reporte", poc="rce-leer-joyas", token="mal/token"), "token inválido"),
+    ]:
+        try:
+            validar(mala)
+            raise AssertionError(f"la RoE dejó pasar una acción que tenía que rechazar: {mala}")
+        except PermissionError as e:
+            assert motivo in str(e), e
+    argv = validar(Accion("x", "curl_post", "phantomcorp", 80, "/portal/login", poc="sqli-bypass-login"))
+    assert "--data" in argv and "user=admin'-- -&pass=x" in argv, "el payload lo pone el catálogo, no el agente"
 
     alt = panel.demo_alteracion(pathlib.Path(r1), CLAVE)
     assert alt["detectada"] and f"{alt['linea']} y {alt['linea'] + 1}" in alt["mensaje"], alt

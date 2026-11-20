@@ -11,7 +11,8 @@ import os
 import sys
 from dataclasses import asdict
 
-from agentes import AgenteEnum, AgenteRecon, hallazgos_http
+from agentes import (AgenteEnum, AgenteFoothold, AgenteImpacto, AgenteLoot,
+                     AgenteRecon, hallazgos_http)
 from bitacora import Bitacora
 from roe import validar
 
@@ -48,7 +49,12 @@ if __name__ == "__main__":
     if not clave:
         sys.exit("definí PTAAS_CLAVE: es la clave HMAC de la bitácora")
     bitacora = Bitacora(sys.argv[1] if len(sys.argv) > 1 else "bitacora.jsonl", clave)
-    pizarra = correr([AgenteRecon(), AgenteEnum()], bitacora, ejecutar_docker)
+    swarm = [AgenteRecon(), AgenteEnum(), AgenteFoothold(), AgenteLoot(), AgenteImpacto()]
+    pizarra = correr(swarm, bitacora, ejecutar_docker)
     print("puertos:", pizarra.get("puertos"))
     print("rutas:", hallazgos_http(pizarra))
+    print("foothold (R2):", "sí" if pizarra.get("foothold") else "no")
+    print("token looteado (R3):", pizarra.get("token"))
+    print("impacto (R4):", "datos de clientes leídos" if pizarra.get("impacto") else "no")
+    print("flags:", pizarra.get("flags", []))
     print("cabeza de la bitácora:", bitacora.ultimo)

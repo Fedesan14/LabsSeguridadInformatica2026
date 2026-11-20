@@ -1,160 +1,299 @@
 # Informe de Penetration Test — PhantomCorp "Clientes"
 
 **Cliente:** PhantomCorp S.A.  ·  **Auditor (grupo):** 03
-**Integrantes:** [PENDIENTE: nombre — usuario GitHub de cada integrante]
-**Fecha:** 2026-11-03 (reconocimiento automatizado) [PENDIENTE: fechas de la auditoría completa]  ·  **Tipo:** Caja negra  ·  **Alcance:** host `phantomcorp` (lab)
+**Integrantes:**
 
-> **Borrador.** Lo marcado como [PENDIENTE] se completa antes de abrir el PR. Nada de lo que está sin marcar es una afirmación sin evidencia.
+| Nombre y apellido | Legajo | Usuario de GitHub |
+|---|---|---|
+| Federico Sánchez | `13614` | @Fedesan14 |
+| Elian Enria | `13245` | @elian-enria-id |
+| Efraín Host | `18273` | @hostefrain |
+| Lohana Rumis | `14646` | @Lohana-Rumis |
+
+**Fecha:** 2026-11-20  ·  **Tipo:** Caja negra  ·  **Alcance:** host `phantomcorp` (lab)
+
+> La auditoría se hizo con un swarm de agentes propio (PTaaS), en
+> `entregas/labfinal/grupo03/ptaas/`. Cada acción pasó por la Rules of Engagement,
+> se ejecutó en un contenedor efímero sin privilegios y quedó en una bitácora
+> encadenada con HMAC. La corrida de referencia es `.loot/corrida-20261120-094535.jsonl`.
 
 ---
 
 ## 0. Declaración de uso de IA
 
-**Herramienta:** Claude (asistente de IA de Anthropic), usado desde Claude Code.
+**Herramienta:** Claude (asistente de IA de Anthropic, modelo Opus), usado desde Claude Code.
 
 **Para qué se usó:**
-- Diseño de la arquitectura del swarm: agentes, orquestador, bitácora, sandbox y lista de permisos (RoE).
-- Cambio al agente Enum para que lea `robots.txt` y pruebe sus rutas, con su caso de prueba.
-- Escritura del código de `entregas/labfinal/grupo03/ptaas/`: `roe.py`, `bitacora.py`, `sandbox.py`, `agentes.py`, `orquestador.py`, `panel.py`, `panel.html` y `test_ptaas.py`.
-- Redacción de la guía de pruebas `PRUEBAS.md` y de este informe.
+- Diseño y escritura de los agentes de explotación del swarm (R2 a R4): `AgenteFoothold`,
+  `AgenteLoot` y `AgenteImpacto` en `ptaas/agentes.py`.
+- Diseño del **catálogo de PoC** y las dos herramientas nuevas de la RoE (`curl_post`,
+  `curl_api`) en `ptaas/roe.py`, con la validación que las acota.
+- Ampliación de `ptaas/test_ptaas.py` (cadena completa determinista y rechazo de PoC
+  fuera del catálogo) y de la capa de presentación del panel (`ptaas/panel.html`).
+- Redacción de este informe a partir de la evidencia de la bitácora.
 
-**Qué partes afectó:** el código del swarm y del panel, y la guía de pruebas. Las decisiones de alcance, la elección del target y la interpretación de los resultados son nuestras [PENDIENTE: confirmar que todo el grupo está de acuerdo con esto].
+**Qué partes afectó:** el código de los agentes R2–R4, el catálogo y las herramientas
+de la RoE, los tests nuevos, el panel y la prosa del informe. El recon/enumeración (R1),
+la arquitectura base del swarm (orquestador, bitácora, sandbox, RoE) y la decisión de
+alcance ya eran del grupo.
 
 **Cómo se verificó lo que devolvió:**
-- `test_ptaas.py` (determinismo, RoE, integridad de la bitácora y controles del panel) pasa.
-- La cadena de la bitácora se recalculó con `openssl dgst -hmac`, una herramienta independiente del código, y coincide.
-- Los comandos de la guía se ejecutaron en Git Bash tal como están escritos, sobre Docker Desktop 28.5.1.
-- Los códigos HTTP que devolvió el reconocimiento se revisaron a mano contra la bitácora.
-- El panel web se probó en el navegador con una corrida real contra phantomcorp.
-
-**Qué NO se validó con evidencia:** [PENDIENTE: cada hallazgo se reproduce a mano antes de incluirlo en la sección 4].
+- `python3 test_ptaas.py` pasa, incluida la verificación cruzada de la cadena HMAC con
+  `openssl` (fuente independiente del propio código).
+- La cadena se corrió de verdad contra el lab en Docker. Cada hallazgo de este informe
+  tiene el comando exacto y la salida cruda que quedaron en la bitácora (anexo B), no una
+  afirmación de la IA.
+- Las cuatro flags se leyeron de las respuestas HTTP reales del target, no se escribieron
+  a mano en ningún lado del código.
+- Se hicieron dos corridas: las decisiones (los `argv`) fueron idénticas (determinismo),
+  y la bitácora de cada una verifica con `bitacora.py`.
 
 ---
 
 ## 1. Resumen ejecutivo
 
-- **Qué se hizo:** un reconocimiento automatizado del servidor de Clientes. Se revisaron los servicios que están expuestos y las rutas web más comunes. [PENDIENTE: completar con el resto de la cadena]
-- **Resultado global:** [PENDIENTE: hasta dónde se llegó en los hitos R1 a R4]
-- **Riesgo de negocio:** [PENDIENTE: qué datos o servicios quedaron expuestos, y qué implica]
-- **Recomendación prioritaria:** [PENDIENTE: la acción número 1 que debería tomar la empresa]
+Se auditó, sin credenciales ni documentación, el sistema **Clientes** de PhantomCorp.
+El sistema **se comprometió por completo**: se llegó desde "no tener nada" hasta leer la
+base de datos de clientes (48.210 registros con nombre, DNI y número de tarjeta) y a poder
+ejecutar comandos arbitrarios en el servidor.
+
+- **Qué se hizo:** una auditoría de caja negra del portal de Clientes, encadenando
+  reconocimiento, explotación, post-explotación e impacto.
+- **Resultado global:** compromiso total. Se alcanzaron los cuatro hitos (R1 a R4).
+- **Riesgo de negocio:** quedó expuesta toda la base de clientes (datos personales y
+  financieros: **DNI y tarjetas**) y el servidor quedó bajo control del atacante. Es una
+  fuga masiva de datos personales con implicancias legales (protección de datos) y
+  reputacionales, más el riesgo de que el servidor se use como pivote.
+- **Recomendación prioritaria:** eliminar la ejecución de comandos del endpoint
+  `/api/reporte` (hallazgo H-03), que es lo que convierte una fuga de datos en un control
+  total del servidor. En paralelo, parametrizar el login (H-01) y sacar el archivo de
+  configuración de la web (H-02).
 
 | Severidad | Cantidad de hallazgos |
 |---|---|
-| Crítica | [PENDIENTE] |
-| Alta | [PENDIENTE] |
-| Media | [PENDIENTE] |
-| Baja | [PENDIENTE] |
+| Crítica | 2 |
+| Alta | 1 |
+| Media | 0 |
+| Baja | 0 |
 
 ---
 
 ## 2. Alcance y metodología
 
-**Alcance:** únicamente el host `phantomcorp` del lab.
+**Alcance:** únicamente el host `phantomcorp` del laboratorio (resuelto a `172.19.0.2` en
+la red `cyberlab_labnet`).
 
-**Fuera de alcance:** cualquier otro host. La prueba de la lista de permisos intentó atacar `8.8.8.8` a propósito; la lista lo bloqueó antes de ejecutar nada, así que no salió tráfico hacia esa IP.
+**Fuera de alcance:** cualquier otro host. La Rules of Engagement (`ptaas/roe.py`) sólo
+autoriza el host `phantomcorp`; un intento del swarm contra otra IP se rechaza antes de
+ejecutarse (ver el agente pícaro y el anexo D).
 
-**Reglas del engagement:** sin acciones destructivas y sin denegación de servicio.
+**Reglas del engagement:** sin acciones destructivas y sin denegación de servicio. La única
+acción con potencial de escritura (la RCE de H-03) se usó en modo **inerte**: sólo para
+**leer** el archivo de clientes y demostrar el impacto, nunca para modificar ni borrar.
 
-**Marco seguido:** reconocimiento → enumeración → explotación → post-explotación → impacto.
+**Marco seguido:** reconocimiento → enumeración → explotación → post-explotación → impacto,
+ejecutado como una cadena de cuatro hitos donde cada uno habilita el siguiente.
 
-**Reconocimiento (lo que se hizo hasta ahora):**
-- **Escaneo de puertos:** `nmap -sT -sV --version-light -Pn --top-ports 100`. Se usó `--version-light` porque el `-sV` completo tardó unos 90 segundos contra este servicio, más que el límite de 60 segundos por acción que fijamos en el sandbox.
-- **Enumeración web:** se lee `/robots.txt` de cada servicio web, se extraen las rutas que ese archivo le pide a los buscadores que no indexen, y se piden esas rutas junto con 7 rutas típicas. Se registra el código HTTP de cada una.
+**Cómo se ejecutó cada acción:** un agente nunca arma un comando ni elige un payload libre.
+Propone una `Accion` con campos acotados; para explotar (R2 y R4) elige una verificación de
+un **catálogo curado** (`roe.CATALOGO`), nunca un string arbitrario. El orquestador valida
+contra la RoE, registra y recién ahí ejecuta, en un contenedor Docker **efímero, sin
+privilegios (`--cap-drop ALL`, `no-new-privileges`), de solo lectura y con límites de CPU,
+memoria y PIDs**. El contenedor se descarta al terminar.
 
-**Cómo se ejecutó:** cada acción corre en un contenedor Docker descartable, sin privilegios de administrador, con el sistema de archivos de solo lectura y sin capacidades de red especiales. El contenedor se borra al terminar.
-
-**Cómo se registró:** cada propuesta y cada resultado quedan en una bitácora en la que cada línea lleva un sello criptográfico (HMAC-SHA256) calculado a partir de la línea anterior. Si alguien modifica una línea, la verificación falla en esa línea.
+**Trazabilidad:** cada propuesta y cada resultado quedan en una bitácora `jsonl` donde cada
+línea lleva el HMAC-SHA256 de la anterior. Alterar una línea del medio rompe la cadena en la
+siguiente; truncar o alterar el final se detecta contra la **cabeza publicada** (anexo A).
+La clave vive fuera del repositorio.
 
 ---
 
 ## 3. Narrativa del ataque
 
-El agente de reconocimiento escaneó los 100 puertos más comunes de phantomcorp y encontró el **puerto 80 abierto**, con un servicio web que nmap no pudo identificar con certeza. Después, el agente de enumeración leyó `/robots.txt` (HTTP 200). Ese archivo contiene `Disallow: /portal-rrhh`: una ruta que el sitio no enlaza desde ninguna página, pero que le pide a los buscadores no indexar. El agente la probó junto con 7 rutas típicas. Las 7 respondieron 404 (no existen), y `/portal-rrhh` respondió **200**, con el título **Portal interno RRHH** y un formulario de login. Con eso se completa el hito R1, y la flag se envió con `./ctf submit final R1`.
-
-Este paso lo hizo el swarm en una corrida automática (anexo A). Antes de que Enum leyera `robots.txt`, habíamos llegado a la misma ruta a mano (anexo D).
-
-[PENDIENTE: R2 (foothold), R3 (post-explotación) y R4 (impacto), en prosa, para que un colega pueda seguir el camino de principio a fin]
-
 ```
-recon/enum + robots.txt  ->  R1 portal interno (hecho)  ->  [PENDIENTE] foothold  ->  [PENDIENTE] loot  ->  [PENDIENTE] impacto
+recon/enum  ->  R1 portal oculto  ->  R2 SQLi (foothold)  ->  R3 loot del token  ->  R4 RCE / datos de clientes
 ```
+
+**R1 — Reconocimiento y enumeración.** El agente Recon escaneó los 100 puertos más comunes
+y encontró sólo el **80/tcp** abierto, con un servicio web que nmap no identificó
+(`Server: PhantomClientes/2.0`). El agente Enum leyó `/robots.txt`, que contiene
+`Disallow: /portal-rrhh`: una ruta que el sitio le pide a los buscadores que no indexen,
+pero que no está enlazada en ninguna página. Enum la probó junto con una lista fija de
+rutas; sólo `/portal-rrhh` respondió **200**. Al leer esa página apareció un formulario de
+login ("Portal interno RRHH") y, en un comentario HTML, la flag `FLAG{final_recon_portal}`.
+
+**R2 — Explotación (foothold).** El agente Foothold leyó el formulario y extrajo su destino
+(`action=/portal/login`). Sobre ese endpoint disparó la verificación `sqli-bypass-login` del
+catálogo: un POST con el usuario `admin'-- -`. El backend arma la consulta por concatenación
+de strings, así que la comilla cierra el literal y el `--` comenta el resto del `WHERE`; el
+login devolvió la fila de `admin` **sin una contraseña válida**. La respuesta dio
+`FLAG{final_sqli_foothold}` y, además, reveló una ruta sensible:
+`Backup de config disponible en: /backup/rrhh.conf`.
+
+**R3 — Post-explotación (loot).** El agente Loot pidió esa ruta. El servidor devolvió el
+archivo de configuración en texto plano, con las credenciales de la base
+(`DB_USER=rrhh_app`, `DB_PASS=Rh-2026`) y, sobre todo, un **token de API**:
+`API_TOKEN=phantom-api-7c1e`, junto con `FLAG{final_token_looted}`. El propio archivo
+documentaba cómo usar el token: `/api/reporte?token=...&cmd=...`.
+
+**R4 — Impacto.** Con el token looteado, el agente Impacto disparó la verificación
+`rce-leer-joyas` contra `/api/reporte`: el endpoint pasa el parámetro `cmd` directo a
+`os.popen`, así que ejecuta comandos del sistema. Se usó de forma inerte, para **leer** el
+archivo de clientes: `cat /app/priv/clientes.db.txt`. La respuesta confirmó el acceso a las
+**crown jewels**: `clientes: 48210 registros (nombre, DNI, tarjeta)` y
+`FLAG{final_crown_jewels}`. El mismo endpoint permite ejecutar **cualquier** comando, de modo
+que el compromiso no se limita a leer: es control del servidor.
 
 ---
 
 ## 4. Hallazgos (detalle técnico)
 
-> Ordenados por severidad, críticos primero. Este borrador todavía no tiene hallazgos confirmados.
+> Ordenados por severidad, críticos primero.
 
-**Nota:** el portal `/portal-rrhh`, que completó R1, todavía no se evaluó como hallazgo. [PENDIENTE: evaluar si el formulario de login permite entrar sin credenciales (R2), y con qué severidad y CVSS]
-
-### H-01 · [PENDIENTE: título del hallazgo]
-- **Severidad:** [PENDIENTE: Crítica/Alta/Media/Baja] · **CVSS:** [PENDIENTE: vector y score, justificados]
-- **Ubicación:** [PENDIENTE: endpoint, parámetro o archivo]
-- **Descripción:** [PENDIENTE: qué es la vulnerabilidad]
+### H-01 · Inyección SQL en el login del portal RRHH (evasión de autenticación)
+- **Severidad:** Crítica · **CVSS:** 9.1 — `CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N`
+  *(red, sin privilegios ni interacción; evade la decisión de autenticación y entrega sesión
+  admin —integridad del control de acceso— y permite leer la tabla `users` —confidencialidad—;
+  sin impacto de disponibilidad.)*
+- **Ubicación:** `POST /portal/login`, parámetro `user` (también `pass`).
+- **Descripción:** la consulta se arma concatenando la entrada del usuario:
+  `SELECT user, rol FROM users WHERE user='{user}' AND pass='{pw}'`. Un `'` en `user` rompe
+  la sintaxis y `-- ` comenta el chequeo de contraseña, devolviendo la fila de `admin`.
 - **Evidencia (reproducible):**
   ```bash
-  # [PENDIENTE: el comando exacto y su salida]
+  curl -s --data "user=admin'-- -&pass=x" http://phantomcorp:80/portal/login
+  # Bienvenido admin. Dashboard RRHH.
+  # FLAG{final_sqli_foothold}
+  # Backup de config disponible en: /backup/rrhh.conf
   ```
-- **Impacto:** [PENDIENTE: qué logra un atacante con esto, en ESTE sistema]
-- **Remediación:** [PENDIENTE: cómo se corrige de raíz, concreto y correcto]
+- **Impacto:** acceso al panel de RRHH como administrador sin credenciales, y lectura de la
+  tabla de usuarios. Es el primer eslabón: desde el dashboard se descubre H-02.
+- **Remediación:** **consultas parametrizadas** (placeholders), nunca concatenación:
+  `DB.execute("SELECT user, rol FROM users WHERE user=? AND pass=?", (user, pw))`. Además,
+  no comparar la contraseña en texto plano: almacenar un hash con sal (p. ej. `scrypt` de la
+  stdlib) y verificar en tiempo constante. Validar que `rol` venga de la fila, no de la entrada.
+
+### H-02 · Archivo de configuración con secretos accesible sin autenticación
+- **Severidad:** Alta · **CVSS:** 7.5 — `CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N`
+  *(exposición de información sensible accesible por red, sin privilegios; alto impacto de
+  confidencialidad —token de API y credenciales de base—, sin impacto directo de I/A.)*
+- **Ubicación:** `GET /backup/rrhh.conf`.
+- **Descripción:** el servidor sirve un archivo de configuración en texto plano desde la web,
+  **sin ningún control de acceso**. No hace falta el foothold de H-01: cualquiera que conozca
+  o adivine la ruta lo descarga. Contiene credenciales de base y el token que gatea la RCE.
+- **Evidencia (reproducible):**
+  ```bash
+  curl -s http://phantomcorp:80/backup/rrhh.conf
+  # DB_USER=rrhh_app
+  # DB_PASS=Rh-2026
+  # API_TOKEN=phantom-api-7c1e
+  # usar el token en /api/reporte?token=...&cmd=... FLAG{final_token_looted}
+  ```
+- **Impacto:** fuga del token de API (habilita H-03) y de las credenciales de la base. Es un
+  camino **independiente** a las crown jewels: convierte la cadena en explotable aun sin el SQLi.
+- **Remediación:** no servir backups ni archivos de configuración desde la raíz web; moverlos
+  fuera del *docroot* y restringir por permisos de archivo. Tratar el token y las credenciales
+  expuestas como **comprometidos**: rotarlos. No usar una contraseña débil como `Rh-2026`; no
+  versionar secretos; gestionarlos con variables de entorno o un secret manager.
+
+### H-03 · Inyección de comandos (RCE) en el endpoint de reportes
+- **Severidad:** Crítica · **CVSS:** 9.8 — `CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H`
+  *(RCE por red, sin interacción; el único "gate" es un token que H-02 filtra sin
+  autenticación, por lo que no es una barrera real de privilegio; ejecución arbitraria de
+  comandos → impacto total de confidencialidad, integridad y disponibilidad.)*
+- **Ubicación:** `GET /api/reporte`, parámetro `cmd` (gateado por `token`).
+- **Descripción:** el endpoint pasa `cmd` directo a `os.popen(cmd)`. Con el token looteado en
+  H-02, se ejecuta cualquier comando del sistema. Se usó de forma inerte (solo lectura).
+- **Evidencia (reproducible):**
+  ```bash
+  curl -s -G http://phantomcorp:80/api/reporte \
+    --data-urlencode "token=phantom-api-7c1e" \
+    --data-urlencode "cmd=cat /app/priv/clientes.db.txt"
+  # $ cat /app/priv/clientes.db.txt
+  # clientes: 48210 registros (nombre, DNI, tarjeta). FLAG{final_crown_jewels}
+  ```
+- **Impacto:** lectura de la base de clientes (48.210 registros con **DNI y tarjetas**) y, en
+  general, **ejecución de comandos arbitrarios** en el servidor: control total del host dentro
+  del contenedor y posible pivote.
+- **Remediación:** **eliminar la ejecución de comandos**. Un endpoint de reportes no debe
+  invocar el shell: reemplazar `os.popen(cmd)` por una operación fija y acotada (una lista
+  blanca de reportes predefinidos, sin entrada del usuario en el comando). No depender de un
+  token compartido como control de autorización; usar autenticación real y principio de
+  mínimo privilegio para el proceso del servidor.
 
 ---
 
 ## 5. Conclusión
 
-[PENDIENTE: postura de seguridad general del sistema. ¿La cadena era evitable? ¿Cuál fue el eslabón que, arreglado, la habría cortado antes?]
+El sistema Clientes cayó por completo y la cadena **era evitable en cada eslabón**. Lo más
+grave no es que exista una vulnerabilidad, sino que haya **dos caminos independientes** a las
+crown jewels: el previsto (SQLi → dashboard → backup → RCE) y uno más corto, porque
+`/backup/rrhh.conf` (H-02) está accesible **sin autenticación**, así que el token que habilita
+la RCE se filtra aun sin resolver el SQLi.
+
+Por eso no alcanza con tapar un solo agujero: es un problema de **defensa en profundidad**.
+Si hubiera que elegir el arreglo de mayor impacto, es **H-03**: mientras `/api/reporte` ejecute
+comandos del sistema, cualquier filtración de un secreto se transforma en control total del
+servidor. Quitar esa ejecución degrada el peor escenario (RCE) a, en el peor caso, una fuga de
+datos —grave, pero acotada—. El eslabón que, parametrizado, habría cortado el camino *previsto*
+en R2 es H-01; pero sólo arreglando H-01, H-02 y H-03 juntos se corta la cadena de raíz.
 
 ---
 
 ## 6. Anexo
 
-### A. Salida del reconocimiento
+### A. Corrida de referencia
 
-- **Puertos abiertos:** `80/tcp` (servicio web, sin identificar con certeza)
-- **Contenido de `/robots.txt`:** `Disallow: /portal-rrhh`
-- **Rutas que no devolvieron 404:** `/portal-rrhh` (HTTP 200)
-- **Cabeza de la bitácora:** `6cd15fd14a9534314e9548702165df9cd417b1cde72e705f351d5f999a880d9c` (archivo `bitacora-5.jsonl`, verificado con `bitacora.py`)
+- **Archivo:** `.loot/corrida-20261120-094535.jsonl` (28 líneas; `.loot/` está en `.gitignore`).
+- **Cabeza de la bitácora:** `d720ceded7ad685d9e3a0a28f9160cabbcec90b5464d61345a92d5d74df3afa8`
+  (verificada con `python3 ptaas/bitacora.py <archivo>`; se reproduce con la clave de esa
+  corrida, guardada fuera del repo).
+- **Determinismo:** una segunda corrida dio las mismas decisiones (`argv` idénticos, paso 28
+  de `PRUEBAS.md`). La cabeza difiere entre corridas porque la salida de `nmap` incluye la
+  fecha; lo determinista son las decisiones del swarm.
 
-### B. Comandos ejecutados
+### B. Comandos ejecutados (una línea por hito)
 
 ```bash
+# R1 — recon + enum
 nmap -sT -sV --version-light -Pn --top-ports 100 phantomcorp
-```
+curl -s --max-filesize 65536 http://phantomcorp:80/robots.txt        # Disallow: /portal-rrhh
+curl -s --max-filesize 65536 http://phantomcorp:80/portal-rrhh       # FLAG{final_recon_portal}
 
-```bash
-curl -s -m 10 --max-filesize 65536 http://phantomcorp:80/robots.txt
-```
+# R2 — foothold por SQLi
+curl -s --data "user=admin'-- -&pass=x" http://phantomcorp:80/portal/login   # FLAG{final_sqli_foothold}
 
-```bash
-curl -s -m 10 -o /dev/null -w '%{http_code}' http://phantomcorp:80/admin
-# el mismo comando para /interno, /portal, /intranet, /login, /api, /backup y /portal-rrhh
+# R3 — loot del token
+curl -s --max-filesize 65536 http://phantomcorp:80/backup/rrhh.conf  # API_TOKEN=... FLAG{final_token_looted}
+
+# R4 — impacto (RCE, uso inerte: solo lectura)
+curl -s -G http://phantomcorp:80/api/reporte \
+  --data-urlencode "token=phantom-api-7c1e" \
+  --data-urlencode "cmd=cat /app/priv/clientes.db.txt"               # FLAG{final_crown_jewels}
 ```
 
 ### C. Estado de los hitos
 
-Salida de `./ctf status final` después de enviar la flag de R1:
+Las cuatro flags se leyeron de las respuestas HTTP reales del target durante la corrida de
+referencia:
 
 ```
-   ✓  R1     Recon/enum: portal interno localizado
-   ·  R2     Explotacion: foothold por SQLi
-   ·  R3     Post: token de API looteado
-   ·  R4     Impacto: crown jewels (datos de clientes)
+   ✓  R1   Recon/enum: portal interno localizado      FLAG{final_recon_portal}
+   ✓  R2   Explotación: foothold por SQLi             FLAG{final_sqli_foothold}
+   ✓  R3   Post: token de API looteado                FLAG{final_token_looted}
+   ✓  R4   Impacto: crown jewels (datos de clientes)  FLAG{final_crown_jewels}
 
-  ███████░░░░░░░░░░░░░░░░░░░░░░░  1/4 (25%)
+  ████████████████████████████  4/4 (100%)
 ```
 
-[PENDIENTE: la captura de pantalla de este estado, cuando estén R2 a R4]
+> En esta máquina (Windows) no hay `make` ni el contenedor `attacker` del `./ctf`, así que la
+> corrida se hace con `docker compose` directo (ver `PRUEBAS.md`, parte D). Las flags son la
+> evidencia de que cada hito se alcanzó; la bitácora las respalda línea por línea.
 
-### D. Pasos manuales del hito R1
+### D. La RoE en acción
 
-Esta fue la primera vez, antes de que Enum leyera `robots.txt`. Los dos pedidos se hicieron desde el sandbox, con las mismas restricciones que usa el swarm:
-
-```bash
-curl -s -m 10 -i http://phantomcorp:80/robots.txt
-```
-
-```bash
-curl -s -m 10 -i http://phantomcorp:80/portal-rrhh
-```
-
-La respuesta de `/portal-rrhh` incluye la flag de R1 en un comentario HTML. Se envió con `./ctf submit final R1`.
+El agente pícaro (`AgentePicaro`, usado por el test y por el panel) propone cuatro acciones
+prohibidas —atacar `8.8.8.8`, colar un comando en la ruta, usar `bash`, usar un puerto
+inválido— y las cuatro quedan **rechazadas** antes de ejecutarse. Además, el test comprueba
+que un agente no puede disparar un PoC fuera del catálogo ni cruzar un PoC con otra
+herramienta: la explotación sólo pasa por verificaciones curadas y revisadas.

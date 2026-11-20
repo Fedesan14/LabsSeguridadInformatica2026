@@ -6,6 +6,17 @@ Esta guía prueba el swarm de punta a punta, en cuatro niveles que van de menos 
 más infraestructura. Cada paso dice **qué hacer**, el **comando** y **qué tenés
 que ver**. No pases al paso siguiente hasta que el actual dé lo esperado.
 
+> **Atajo para la demo.** Si solo querés levantar todo y abrir el panel, hay un
+> script que hace build + blanco + panel de una. Desde la raíz del repo, con
+> Docker Desktop abierto:
+> - Windows (PowerShell): `.\entregas\labfinal\grupo03\ptaas\levantar.ps1`
+>   (para bajar el lab: el mismo comando con `-Down`)
+> - Git Bash / Linux / mac: `./entregas/labfinal/grupo03/ptaas/levantar.sh`
+>   (para bajar el lab: el mismo comando con `down`)
+>
+> Abre el panel en `http://127.0.0.1:8765/`. El resto de esta guía es el paso a
+> paso manual, para entender cada pieza y para los niveles 1 y 2.
+
 Los resultados esperados son los que se obtuvieron al probarlo el 2026-11-03,
 en Windows 11 con Docker Desktop 28.5.1.
 
@@ -277,16 +288,23 @@ echo "$PTAAS_CLAVE"
 python3 entregas/labfinal/grupo03/ptaas/orquestador.py .loot/bitacora-1.jsonl
 ```
 
-Tarda unos **30 segundos**. **Tenés que ver** tres líneas:
+Tarda unos **30 segundos**. **Tenés que ver** estas líneas:
 
 - `puertos:` los puertos abiertos del target, por ejemplo `{80: 'http?'}`. El
   `?` significa que nmap no está seguro del servicio.
-- `rutas:` las rutas que respondieron algo distinto de 404. Con la versión
-  actual tenés que ver `(80, '/portal-rrhh'): 200`: es el portal del hito R1.
+- `rutas:` las rutas que respondieron algo distinto de 404. Tenés que ver
+  `(80, '/portal-rrhh'): 200`: es el portal del hito R1.
+- `foothold (R2): sí` — entró al portal por SQLi.
+- `token looteado (R3): phantom-api-7c1e` — lo sacó del backup de config.
+- `impacto (R4): datos de clientes leídos`.
+- `flags:` las cuatro, en orden: `['FLAG{final_recon_portal}',
+  'FLAG{final_sqli_foothold}', 'FLAG{final_token_looted}',
+  'FLAG{final_crown_jewels}']`.
 
 Enum lee primero `/robots.txt` y prueba también las rutas que ese archivo
 esconde (`Disallow`). Por eso `/portal-rrhh` aparece aunque no esté en ninguna
-lista fija: el sitio la menciona en `robots.txt`.
+lista fija: el sitio la menciona en `robots.txt`. A partir de ahí, Foothold, Loot
+e Impacto encadenan R2 a R4 solos.
 - `cabeza de la bitácora:` un hash de 64 caracteres hexadecimales.
 
 **Si dice `FileExistsError`:** ese archivo de bitácora ya existe. El
@@ -567,10 +585,16 @@ docker compose -p cyberlab --project-directory . \
 
 ## Alcance actual
 
-Los agentes que existen llegan hasta **R1**: encuentran los puertos abiertos,
-las páginas de una lista fija y las que `robots.txt` esconde. El swarm resuelve
-R1 solo, sin pasos manuales.
+El swarm encadena los **cuatro hitos** solo, sin pasos manuales:
 
-Cada agente nuevo para R2–R4 necesita primero su caso en `test_ptaas.py`, con
-salidas fijas del sandbox falso, y recién después se prueba contra el target
-con esta guía.
+- **R1** (Recon + Enum): puertos abiertos y el portal oculto que esconde `robots.txt`.
+- **R2** (Foothold): lee el formulario del portal y evade el login por SQLi, con una
+  verificación del catálogo (`roe.CATALOGO`), no un payload libre.
+- **R3** (Loot): del dashboard sale la ruta del backup; lo lee y saca el token de API.
+- **R4** (Impacto): con el token, dispara la verificación de RCE del catálogo —en modo
+  inerte, solo lectura— y llega a los datos de clientes.
+
+Cada agente tiene su caso en `test_ptaas.py` con salidas fijas del sandbox falso
+(nivel 1), así que la cadena completa se prueba sin Docker antes de correrla contra
+el target. El test también comprueba que un agente **no** puede disparar un PoC que no
+esté en el catálogo.

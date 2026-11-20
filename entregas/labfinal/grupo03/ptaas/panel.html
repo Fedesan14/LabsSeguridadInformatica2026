@@ -157,7 +157,7 @@ li.accion.actual { border-color: var(--info); box-shadow: 0 0 0 2px var(--info-f
 
     <section>
       <h2>2 · Correr el swarm</h2>
-      <p class="ayuda">Recon escanea los puertos del target y Enum busca páginas ocultas. Cada acción corre en un contenedor aislado. Tarda unos 30 segundos y necesita Docker y el lab levantado.</p>
+      <p class="ayuda">El swarm encadena los cuatro hitos: Recon escanea puertos, Enum encuentra el portal oculto (R1), Foothold entra por SQLi (R2), Loot saca el token del backup (R3) e Impacto llega a los datos de clientes (R4). Cada acción corre en un contenedor aislado. Tarda unos 30 segundos y necesita Docker y el lab levantado.</p>
       <label for="nombre">Archivo de bitácora (en .loot/)</label>
       <input id="nombre" spellcheck="false">
       <div class="fila"><button class="primario" id="correr">▶ Correr el swarm</button></div>
@@ -257,6 +257,9 @@ const $ = id => document.getElementById(id);
 const AGENTES = {
   recon: ["Recon", "explora qué puertos hay"],
   enum: ["Enum", "busca páginas ocultas"],
+  foothold: ["Foothold", "entra al portal (R2)"],
+  loot: ["Loot", "busca secretos (R3)"],
+  impacto: ["Impacto", "llega a los datos (R4)"],
   picaro: ["Pícaro", "agente de prueba de la RoE"],
 };
 let eventos = [], vista = null, sondeo = null, rep = null, repTimer = null, enVivo = false;
@@ -326,13 +329,18 @@ function queHizo(a, infinitivo) {
   if (a.rech) {
     const x = a.rech.datos.accion || {};
     if (x.objetivo !== OBJETIVO) return `${quiso}atacar ${x.objetivo}`;
-    if (!["curl", "curl_cuerpo", "nmap"].includes(x.herramienta)) return `${quiso}usar ${x.herramienta} contra ${x.objetivo}`;
+    if (!["curl", "curl_cuerpo", "curl_post", "curl_api", "nmap"].includes(x.herramienta)) return `${quiso}usar ${x.herramienta} contra ${x.objetivo}`;
     return `${quiso}probar ${x.objetivo}${x.param || ""} en el puerto ${x.puerto}`;
   }
-  const argv = (a.prop && a.prop.datos.argv) || [];
-  if (argv[0] === "curl" && !argv.includes("-w")) return infinitivo ? "leer robots.txt" : "Leyó robots.txt";
+  const argv = (a.prop && a.prop.datos.argv) || [], ruta = rutaDe(argv);
   if (argv[0] === "nmap") return infinitivo ? `escanear los puertos de ${argv[argv.length - 1]}` : `Escaneó los puertos de ${argv[argv.length - 1]}`;
-  if (argv[0] === "curl") return infinitivo ? `probar si existe la página ${rutaDe(argv) || "?"}` : `Probó si existe la página ${rutaDe(argv) || "?"}`;
+  if (argv[0] === "curl") {
+    if (argv.includes("--data")) return infinitivo ? "entrar al portal con una inyección SQL" : "Probó entrar al portal con una inyección SQL";
+    if (argv.includes("-G")) return infinitivo ? "ejecutar un comando en el servidor con el token" : "Ejecutó un comando en el servidor con el token looteado";
+    if (argv.includes("-w")) return infinitivo ? `probar si existe la página ${ruta || "?"}` : `Probó si existe la página ${ruta || "?"}`;
+    if (ruta && ruta.endsWith("robots.txt")) return infinitivo ? "leer robots.txt" : "Leyó robots.txt";
+    return infinitivo ? `leer el contenido de ${ruta || "?"}` : `Leyó el contenido de ${ruta || "?"}`;
+  }
   return argv.join(" ");
 }
 
@@ -357,17 +365,34 @@ function queResulto(a) {
   if (!a.res) return { texto: "Ejecutándose…", tipo: "pendiente" };
   const { rc, salida } = a.res.datos, argv = a.prop.datos.argv || [];
   if (rc === -1) return { texto: "Se cortó: tardó más de 60 segundos", tipo: "error" };
-  if (argv[0] === "curl" && !argv.includes("-w")) {
-    if (rc !== 0) return { texto: "No se pudo leer robots.txt", tipo: "error" };
-    const rutas = [...String(salida).matchAll(/^Disallow:\s*(\S+)/gim)].map(m => m[1]);
-    if (!rutas.length) return { texto: "No esconde rutas", tipo: "nada" };
-    return { texto: `Esconde ${rutas.length === 1 ? "1 ruta" : rutas.length + " rutas"}: ${rutas.join(", ")}`, tipo: "hallazgo" };
-  }
   if (argv[0] === "nmap") {
     if (rc !== 0) return { texto: "nmap falló", tipo: "error" };
     const ps = puertosDe(salida);
     if (!ps.length) return { texto: "No encontró puertos abiertos", tipo: "nada" };
     return { texto: `Encontró ${ps.length === 1 ? "1 puerto abierto" : ps.length + " puertos abiertos"}: ` + ps.map(([p, s]) => `${p} (${servicio(s)})`).join(", "), tipo: "ok" };
+  }
+  if (argv[0] === "curl" && argv.includes("--data")) {
+    const t = String(salida);
+    if (/FLAG\{/.test(t) || /bienvenido/i.test(t)) return { texto: "Entró como admin: evasión de login por SQLi", tipo: "hallazgo" };
+    return { texto: "El login rechazó el intento", tipo: "nada" };
+  }
+  if (argv[0] === "curl" && argv.includes("-G")) {
+    const t = String(salida);
+    if (/FLAG\{/.test(t) || /clientes/i.test(t)) return { texto: "El servidor ejecutó el comando y leyó los datos de clientes", tipo: "hallazgo" };
+    return { texto: "El endpoint respondió", tipo: "nada" };
+  }
+  if (argv[0] === "curl" && !argv.includes("-w")) {
+    if (rc !== 0) return { texto: "No se pudo leer el contenido", tipo: "error" };
+    const t = String(salida), ruta = rutaDe(argv) || "";
+    if (ruta.endsWith("robots.txt")) {
+      const rutas = [...t.matchAll(/^Disallow:\s*(\S+)/gim)].map(m => m[1]);
+      if (!rutas.length) return { texto: "No esconde rutas", tipo: "nada" };
+      return { texto: `Esconde ${rutas.length === 1 ? "1 ruta" : rutas.length + " rutas"}: ${rutas.join(", ")}`, tipo: "hallazgo" };
+    }
+    const tok = t.match(/API_TOKEN=([\w-]+)/);
+    if (tok) return { texto: `Filtró un token de API: ${tok[1]}`, tipo: "hallazgo" };
+    if (/FLAG\{/.test(t)) return { texto: "Expuso contenido sensible", tipo: "hallazgo" };
+    return { texto: "Devolvió contenido", tipo: "nada" };
   }
   if (argv[0] === "curl") {
     const c = String(salida).trim();
@@ -412,14 +437,19 @@ function tarjeta(a, actual) {
 
 function pizarra(acciones) {
   const caja = $("pizarra");
-  const puertos = [], rutas = [], bloqueos = acciones.filter(a => a.rech).length;
+  const puertos = [], rutas = [], flags = [], bloqueos = acciones.filter(a => a.rech).length;
   acciones.forEach(a => {
     if (!a.res || !a.prop) return;
     const argv = a.prop.datos.argv || [];
     if (argv[0] === "nmap") puertos.push(...puertosDe(a.res.datos.salida));
     if (argv[0] === "curl" && argv.includes("-w")) rutas.push([rutaDe(argv), queResulto(a)]);
+    for (const m of String(a.res.datos.salida).matchAll(/FLAG\{[^}]+\}/g)) if (!flags.includes(m[0])) flags.push(m[0]);
   });
   const nodos = [];
+  if (flags.length) {
+    nodos.push(el("div", "pz-grupo", "Hitos (flags)"));
+    flags.forEach(f => { const g = el("div", "pz-item"); g.append(el("code", "", f), el("span", "etq hallazgo", "★")); nodos.push(g); });
+  }
   if (puertos.length) {
     nodos.push(el("div", "pz-grupo", "Puertos abiertos"));
     puertos.forEach(([p, s]) => { const f = el("div", "pz-item"); f.append(el("code", "", `${p}/tcp`), el("span", "etq ok", servicio(s))); nodos.push(f); });
