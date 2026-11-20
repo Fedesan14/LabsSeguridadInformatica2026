@@ -12,6 +12,8 @@
 
 **Herramienta:** Claude (asistente de IA de Anthropic), utilizado a través de Claude Code.
 
+**Revisión posterior:** ChatGPT Codex, utilizado el 2026-11-19 para ejecutar la validación local disponible y revisar la consistencia del entregable. En esta revisión no se levantó Docker, no se envió tráfico al objetivo y no se generaron hallazgos ni flags.
+
 **Usos:**
 - Diseño de la arquitectura del swarm: agentes, orquestador, bitácora, sandbox y lista de permisos (RoE).
 - Modificación del agente Enum para que consulte `robots.txt` y pruebe las rutas que allí figuran, con su test.
@@ -22,6 +24,7 @@
 
 **Verificación del resultado entregado por la IA:**
 - Pasa `test_ptaas.py` (determinismo, RoE, integridad de la bitácora y controles del panel).
+- En la revisión del 2026-11-19 se ejecutó localmente `python test_ptaas.py`: finalizó con `OK`. OpenSSL no estaba disponible en el `PATH`, por lo que esa verificación independiente quedó pendiente de repetir en Git Bash o en una máquina con OpenSSL.
 - La cadena de la bitácora se recalculó con `openssl dgst -hmac`, herramienta ajena al código, y el resultado coincide.
 - Los comandos de la guía se corrieron en Git Bash exactamente como están escritos, sobre Docker Desktop 28.5.1.
 - Los códigos HTTP del reconocimiento se contrastaron manualmente con la bitácora.
