@@ -1,7 +1,7 @@
 ﻿# Informe forense â€” Lab Extra 2: El repo que delata
 
-**Materia:** Seguridad InformÃ¡tica
-**Laboratorio:** Extra 2 â€” El repo que delata (forense Git)
+**Materia:** Seguridad Informática
+**Laboratorio:** Extra 2 El repo que delata (forense Git)
 **Grupo:** 03
 **Repositorio:** `LabsSeguridadInformatica2026`
 **Rama de trabajo:** `labextra2-grupo03`
@@ -10,16 +10,16 @@
 
 | Apellido y nombre | Usuario de GitHub |
 |---|---|
-| SÃ¡nchez, Federico | `Fedesan14` |
-| Host, EfraÃ­n | `hostefrain` |
+| Sanchez, Federico | `Fedesan14` |
+| Host, Efrai­n | `hostefrain` |
 | Rumis, Lohana | `Lohana-Rumis` |
 | Enria, Elian | `elian-enria-id` |
 
-## 2. DeclaraciÃ³n de uso de inteligencia artificial
+## 2. Declaración de uso de inteligencia artificial
 
-Se utilizÃ³ ChatGPT como herramienta de apoyo para organizar la investigaciÃ³n, interpretar resultados de comandos Git, estructurar el informe y revisar explicaciones tÃ©cnicas sobre el modelo de objetos de Git y las herramientas de prevenciÃ³n y remediaciÃ³n de filtraciones.
+Se utilizó ChatGPT como herramienta de apoyo para organizar la investigación, interpretar resultados de comandos Git, estructurar el informe y revisar explicaciones técnicas sobre el modelo de objetos de Git y las herramientas de prevención y remediación de filtraciones.
 
-Los comandos de investigaciÃ³n fueron ejecutados sobre el repositorio del caso por los integrantes del grupo. Las conclusiones y evidencias incluidas en este informe se basan en las salidas obtenidas durante esa investigaciÃ³n. La herramienta de IA no reemplaza las evidencias ni se considera autora de los hallazgos.
+Los comandos de investigación fueron ejecutados sobre el repositorio del caso por los integrantes del grupo. Las conclusiones y evidencias incluidas en este informe se basan en las salidas obtenidas durante esa investigación. La herramienta de IA no reemplaza las evidencias ni se considera autora de los hallazgos.
 
 ## 3. Objetivo y metodologÃ­a
 
