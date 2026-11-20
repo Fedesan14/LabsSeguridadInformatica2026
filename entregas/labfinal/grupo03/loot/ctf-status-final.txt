@@ -1,0 +1,13 @@
+
+  ╭────────────────────────────────────────────────────────────╮
+  │                    PROGRESO · LAB final                    │
+  ╰────────────────────────────────────────────────────────────╯
+
+   ✓  R1     Recon/enum: portal interno localizado
+   ✓  R2     Explotacion: foothold por SQLi
+   ✓  R3     Post: token de API looteado
+   ✓  R4     Impacto: crown jewels (datos de clientes)
+
+  ██████████████████████████████  4/4 (100%)
+
+[ OK ] ¡Lab final COMPLETO! Ponete las pilas con la próxima unidad.
