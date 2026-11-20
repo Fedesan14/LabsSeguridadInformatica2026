@@ -1,0 +1,7 @@
+puertos: {80: 'http?'}
+rutas: {(80, '/portal-rrhh'): 200}
+foothold (R2): sí
+token looteado (R3): phantom-api-7c1e
+impacto (R4): datos de clientes leídos
+flags: ['FLAG{final_recon_portal}', 'FLAG{final_sqli_foothold}', 'FLAG{final_token_looted}', 'FLAG{final_crown_jewels}']
+cabeza de la bitácora: 2c93840ca01edec9ce51554f9f88f4f439b243197a21b95c8fca5c916aa85b88
