@@ -15,7 +15,8 @@
 > La auditoría se hizo con un swarm de agentes propio (PTaaS), en
 > `entregas/labfinal/grupo03/ptaas/`. Cada acción pasó por la Rules of Engagement,
 > se ejecutó en un contenedor efímero sin privilegios y quedó en una bitácora
-> encadenada con HMAC. La corrida de referencia es `.loot/corrida-20261120-094535.jsonl`.
+> encadenada con HMAC. La corrida de referencia es `loot/corrida-20261120-163916.jsonl`,
+> incluida en este entregable.
 
 ---
 
@@ -244,13 +245,17 @@ en R2 es H-01; pero sólo arreglando H-01, H-02 y H-03 juntos se corta la cadena
 
 ### A. Corrida de referencia
 
-- **Archivo:** `.loot/corrida-20261120-094535.jsonl` (28 líneas; `.loot/` está en `.gitignore`).
-- **Cabeza de la bitácora:** `d720ceded7ad685d9e3a0a28f9160cabbcec90b5464d61345a92d5d74df3afa8`
-  (verificada con `python3 ptaas/bitacora.py <archivo>`; se reproduce con la clave de esa
-  corrida, guardada fuera del repo).
-- **Determinismo:** una segunda corrida dio las mismas decisiones (`argv` idénticos, paso 28
-  de `PRUEBAS.md`). La cabeza difiere entre corridas porque la salida de `nmap` incluye la
-  fecha; lo determinista son las decisiones del swarm.
+- **Archivo:** `loot/corrida-20261120-163916.jsonl` (28 líneas, incluido en este entregable;
+  también quedan `loot/ctf-status-final.txt` y `loot/orquestador-salida.txt`).
+- **Cabeza de la bitácora:** `2c93840ca01edec9ce51554f9f88f4f439b243197a21b95c8fca5c916aa85b88`
+  (verificada con `python3 ptaas/bitacora.py <archivo>` y, de forma independiente, recalculando
+  la cadena línea a línea con `openssl dgst -sha256 -hmac`: coincide dígito a dígito. La clave
+  de esa corrida se generó al momento y no se versiona).
+- **Determinismo:** se corrió dos veces contra el mismo `phantomcorp`; las 14 acciones
+  propuestas (`argv`) fueron **idénticas** entre ambas corridas, byte a byte. La cabeza de la
+  bitácora difiere entre corridas porque la salida de `nmap` incluye la fecha y porque cada
+  corrida usa una clave HMAC distinta; lo determinista son las decisiones del swarm, no el
+  hash final.
 
 ### B. Comandos ejecutados (una línea por hito)
 
@@ -275,20 +280,24 @@ curl -s -G http://phantomcorp:80/api/reporte \
 ### C. Estado de los hitos
 
 Las cuatro flags se leyeron de las respuestas HTTP reales del target durante la corrida de
-referencia:
+referencia y se entregaron con `./ctf submit final R1..R4`. Salida real de
+`./ctf status final` (también en `loot/ctf-status-final.txt`):
 
 ```
-   ✓  R1   Recon/enum: portal interno localizado      FLAG{final_recon_portal}
-   ✓  R2   Explotación: foothold por SQLi             FLAG{final_sqli_foothold}
-   ✓  R3   Post: token de API looteado                FLAG{final_token_looted}
-   ✓  R4   Impacto: crown jewels (datos de clientes)  FLAG{final_crown_jewels}
+   ✓  R1     Recon/enum: portal interno localizado
+   ✓  R2     Explotacion: foothold por SQLi
+   ✓  R3     Post: token de API looteado
+   ✓  R4     Impacto: crown jewels (datos de clientes)
 
-  ████████████████████████████  4/4 (100%)
+  ██████████████████████████████  4/4 (100%)
+
+[ OK ] ¡Lab final COMPLETO!
 ```
 
-> En esta máquina (Windows) no hay `make` ni el contenedor `attacker` del `./ctf`, así que la
-> corrida se hace con `docker compose` directo (ver `PRUEBAS.md`, parte D). Las flags son la
-> evidencia de que cada hito se alcanzó; la bitácora las respalda línea por línea.
+> En Windows no hay `make` ni el contenedor `attacker` del `./ctf`, así que la corrida del
+> swarm se hace con `docker compose` directo (ver `PRUEBAS.md`, parte D); el envío de las
+> flags y la captura de este estado sí se hicieron con `./ctf`. Las flags son la evidencia de
+> que cada hito se alcanzó; la bitácora las respalda línea por línea.
 
 ### D. La RoE en acción
 
