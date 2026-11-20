@@ -437,18 +437,32 @@ function tarjeta(a, actual) {
 
 function pizarra(acciones) {
   const caja = $("pizarra");
-  const puertos = [], rutas = [], flags = [], bloqueos = acciones.filter(a => a.rech).length;
+  const puertos = [], rutas = [], flags = [], secretos = [], impacto = [], bloqueos = acciones.filter(a => a.rech).length;
   acciones.forEach(a => {
     if (!a.res || !a.prop) return;
-    const argv = a.prop.datos.argv || [];
+    const argv = a.prop.datos.argv || [], salida = String(a.res.datos.salida);
     if (argv[0] === "nmap") puertos.push(...puertosDe(a.res.datos.salida));
     if (argv[0] === "curl" && argv.includes("-w")) rutas.push([rutaDe(argv), queResulto(a)]);
-    for (const m of String(a.res.datos.salida).matchAll(/FLAG\{[^}]+\}/g)) if (!flags.includes(m[0])) flags.push(m[0]);
+    for (const m of salida.matchAll(/FLAG\{[^}]+\}/g)) if (!flags.includes(m[0])) flags.push(m[0]);
+    // Botín: KEY=VALUE que filtra una respuesta de contenido (el backup de config).
+    if (argv[0] === "curl" && !argv.includes("-w"))
+      for (const m of salida.matchAll(/^([A-Z][A-Z0-9_]+)=(\S+)/gm)) if (!secretos.some(([k]) => k === m[1])) secretos.push([m[1], m[2]]);
+    // Impacto: lo que devolvió el comando ejecutado en el servidor (curl -G), sin la flag ni el eco del comando.
+    if (argv[0] === "curl" && argv.includes("-G"))
+      impacto.push(...salida.split("\n").map(s => s.replace(/FLAG\{[^}]+\}/g, "").trim()).filter(s => s && !s.startsWith("$")));
   });
   const nodos = [];
   if (flags.length) {
     nodos.push(el("div", "pz-grupo", "Hitos (flags)"));
     flags.forEach(f => { const g = el("div", "pz-item"); g.append(el("code", "", f), el("span", "etq hallazgo", "★")); nodos.push(g); });
+  }
+  if (secretos.length) {
+    nodos.push(el("div", "pz-grupo", "Botín (secretos filtrados)"));
+    secretos.forEach(([k, v]) => { const f = el("div", "pz-item"); f.append(el("span", "", k), el("code", "", v)); nodos.push(f); });
+  }
+  if (impacto.length) {
+    nodos.push(el("div", "pz-grupo", "Impacto (datos a los que se llegó)"));
+    impacto.forEach(linea => { const f = el("div", "pz-item"); f.append(el("code", "", linea), el("span", "etq hallazgo", "★")); nodos.push(f); });
   }
   if (puertos.length) {
     nodos.push(el("div", "pz-grupo", "Puertos abiertos"));
@@ -610,7 +624,8 @@ $("refrescar").onclick = () => listar().catch(err => aviso("res-bitacora", "mal"
 $("verificar").onclick = async () => {
   try {
     const r = await api("/api/verificar", { nombre: $("lista").value, clave: clave() });
-    if (r.integra) aviso("res-bitacora", "ok", "✓ Nadie modificó esta bitácora · cabeza:", r.cabeza);
+    if (r.integra) aviso("res-bitacora", "ok", "✓ Nadie modificó esta bitácora · cabeza:", r.cabeza)
+      .append(el("div", "", "Los datos que extrajo el swarm (botín, impacto, flags) están a la derecha, en «Lo que hizo el swarm»."));
     else aviso("res-bitacora", "mal", "✗ La cadena no verifica", `${r.mensaje}. La bitácora fue modificada, o la clave no es la que se usó para crearla.`);
   } catch (err) { aviso("res-bitacora", "mal", "No se pudo verificar", err.message); }
 };
